@@ -1,0 +1,16 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/WebView2/vcpkg_installed/x64-windows
+/x64/Debug
+/.vs/WebViewSolution
+/x64/Release
+/WebView2Logger/vcpkg_installed/x64-windows
+/WebView2Logger/x64/Debug
+/.vs/WebView2/v17
+/CookieContainer/vcpkg_installed/x64-windows
+/CookieContainer/x64
+/UnitTestWebView2/vcpkg_installed/x64-windows
+/UnitTestWebView2/x64/Debug
+/UnitTestWebView2/x64/Release
