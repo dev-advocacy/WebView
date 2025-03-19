@@ -185,18 +185,21 @@ namespace WebView2
             regKey.QueryStringValue(L"DisplayVersion", nullptr, &dwSize);
             std::wstring version(dwSize, L'\0');
             regKey.QueryStringValue(L"DisplayVersion", &version[0], &dwSize);
+			version.resize(dwSize == 0 ? 0 : version[dwSize-1] != L'\0' ? dwSize : dwSize-1);
 
             //get the display name
             dwSize = 0;
             regKey.QueryStringValue(L"DisplayName", nullptr, &dwSize);
             std::wstring display_name(dwSize, L'\0');
             regKey.QueryStringValue(L"DisplayName", &display_name[0], &dwSize);
+            display_name.resize(dwSize == 0 ? 0 : display_name[dwSize - 1] != L'\0' ? dwSize : dwSize - 1);
 
             // Get the install location
             dwSize = 0;
             regKey.QueryStringValue(L"InstallLocation", nullptr, &dwSize);
             std::wstring install_location(dwSize, L'\0');
             regKey.QueryStringValue(L"InstallLocation", &install_location[0], &dwSize);
+            install_location.resize(dwSize == 0 ? 0 : install_location[dwSize - 1] != L'\0' ? dwSize : dwSize - 1);
 
             EdgeInfomation edge(display_name, version, install_location);
             
