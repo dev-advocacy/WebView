@@ -1,0 +1,49 @@
+﻿@page "/"
+@using System.Diagnostics
+@inject DialogService DialogService
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+<PageTitle>Home</PageTitle>
+<RadzenCard class="rz-my-12 rz-mx-auto rz-p-4 rz-p-md-12" style="max-width: 600px;">
+    <RadzenTemplateForm Data=@("LoginWithDefaultValues")>
+        <RadzenLogin AllowRegister="true" AllowResetPassword="true" Username=@userName Password=@password
+        AllowRememberMe="true" RememberMe="@rememberMe"
+        Login=@(args => OnLogin(args, "Login with default values"))
+        ResetPassword=@(args => OnResetPassword(args, "Login with default values"))
+        Register=@(args => OnRegister("Login with default values")) />
+    </RadzenTemplateForm>
+</RadzenCard>
+
+
+
+@code {
+    string userName = "";
+    string password = "";
+    bool rememberMe = true;
+
+
+    void OnLogin(LoginArgs args, string name)
+    {
+        if (args.Username == "myuser@foo.com")
+        {
+            // Perform the action (navigate to the /counter page)
+            NavigationManager.NavigateTo($"/counter?username={args.Username}&rememberMe={args.RememberMe}");
+
+        }
+        else
+        {
+            // Display an error message
+            DialogService.Alert("Some message!", "MyTitle", new AlertOptions() { OkButtonText = "Yes" });
+        }
+    }
+
+    void OnRegister(string name)
+    {
+        Debug.WriteLine($"{name} -> Register");
+    }
+
+    void OnResetPassword(string value, string name)
+    {
+        Debug.WriteLine($"{name} -> ResetPassword for user: {value}");
+    }
+}
