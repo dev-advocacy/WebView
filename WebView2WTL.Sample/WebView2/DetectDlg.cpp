@@ -34,8 +34,8 @@ LRESULT CDetectDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 
 
 	for (auto it = m_edge_versions.begin(); it != m_edge_versions.end(); ++it)
-	{
-		if (wcscmp(it->m_name.c_str(), selected_version.c_str()) == 0)
+	{		
+		if (it->m_name == selected_version)
 		{
 			m_information.Format(L"Name: %s\r\nVersion: %s\r\nInstall Location: %s", it->m_name.c_str(), it->m_version.c_str(), it->m_install_location.c_str());
 			DoDataExchange(FALSE);
@@ -62,8 +62,8 @@ LRESULT CDetectDlg::OnCbnSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 
 	for (auto it = m_edge_versions.begin(); it != m_edge_versions.end(); ++it)
 	{
-		if (wcscmp(it->m_name.c_str(), selected_version.c_str()) == 0)
-		{
+		if (it->m_name == selected_version)
+		{		
 			m_information.Format(L"Name: %s\r\nVersion: %s\r\nInstall Location: %s", it->m_name.c_str(), it->m_version.c_str(), it->m_install_location.c_str());
 			DoDataExchange(FALSE);
 			break;
