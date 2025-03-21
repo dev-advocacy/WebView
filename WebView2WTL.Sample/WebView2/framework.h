@@ -56,6 +56,9 @@ extern CAppModule _Module;
 //json
 #include <cpprest/json.h>
 
+// command line parser
+#include <boost/program_options.hpp>
+
 // logs
 #include <boost/log/trivial.hpp>
 #include <boost/log/core.hpp>
@@ -103,6 +106,7 @@ namespace	attrs = boost::log::attributes;
 namespace	sinks = boost::log::sinks;
 namespace	expr = boost::log::expressions;
 namespace	keywords = boost::log::keywords;
+namespace	po = boost::program_options;
 
 
 // custom messages

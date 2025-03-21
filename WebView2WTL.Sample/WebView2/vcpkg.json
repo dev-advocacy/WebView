@@ -6,7 +6,7 @@
   "dependencies": [
     {
       "name": "boost-date-time",
-      "platform": "windows"      
+      "platform": "windows"
     },
     {
       "name": "boost-filesystem",
@@ -22,6 +22,10 @@
     },
     {
       "name": "boost-thread",
+      "platform": "windows"
+    },
+    {
+      "name": "boost-program-options",
       "platform": "windows"
     },
     {

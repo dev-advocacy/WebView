@@ -39,6 +39,8 @@ HWND CMainFrame::CreateAddressBarCtrl(HWND hWndParent)
 
 LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
+	HRESULT hr = S_OK;
+	
 	// create command bar window
 	HWND hWndCmdBar = m_CmdBar.Create(m_hWnd, rcDefault, nullptr, ATL_SIMPLE_CMDBAR_PANE_STYLE);
 	HWND hWndAddressBar = CreateAddressBarCtrl(m_hWnd);
@@ -55,28 +57,27 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	AddSimpleReBarBand(hWndCmdBar);
 	AddSimpleReBarBand(hWndToolBar, nullptr, TRUE);
 	AddSimpleReBarBand(hWndAddressBar, _T("Address"), TRUE);
-
 	CreateSimpleStatusBar();
-
 	
 	
-	HRESULT hr = CWebViewProfile::Profile(m_webviewprofile);
-	if (FAILED(hr))
+	
+	if (FAILED(hr = CWebViewProfile::Profile(m_webviewprofile)))
 	{
-		
-		return 0;
+		LOG_TRACE << "Failed to create the profile | " << "message" << ": 0x" << std::hex << std::setw(8) << hr;
+		return -1;
 	}
+	
 
 	std::wstring version = m_webviewprofile.version;
 	if (version.empty())
-		this->MessageBoxW(L"Please install the WebView2 Runtime: menu Scenario/Installation",L"Warning", MB_OK | MB_ICONWARNING);
+	{
+		this->MessageBoxW(L"Please install the WebView2 Runtime: menu Scenario/Installation", L"Warning", MB_OK | MB_ICONWARNING);
+	}
 
 	_webview_version = version;
-
 	m_webview2 = std::make_unique<CWebView2>(m_webviewprofile.browserDirectory, m_webviewprofile.userDataDirectory, L"https://msdn.microsoft.com");
+	m_webview2->set_test(m_webviewprofile.isTest, m_webviewprofile.port);
 	m_hWndClient = m_webview2->Create(m_hWnd, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
-
-
 	m_webview2->set_parent(this->m_hWnd);
 
 	UIAddToolBar(hWndToolBar);
@@ -88,8 +89,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ATLASSERT(pLoop != nullptr);
 	pLoop->AddMessageFilter(this);
 	pLoop->AddIdleHandler(this);
-
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -99,7 +99,6 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ATLASSERT(pLoop != nullptr);
 	pLoop->RemoveMessageFilter(this);
 	pLoop->RemoveIdleHandler(this);
-
 	bHandled = FALSE;
 	return 1;
 }
@@ -108,20 +107,19 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 LRESULT CMainFrame::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	PostMessage(WM_CLOSE);
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnFileNew(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	// TODO: add code to initialize document
-
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnFileNewWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	::PostThreadMessage(_Module.m_dwMainThreadID, WM_USER, 0, 0L);
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -133,7 +131,7 @@ LRESULT CMainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	rebar.ShowBand(nBandIndex, bVisible);
 	UISetCheck(ID_VIEW_TOOLBAR, bVisible);
 	UpdateLayout();
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnViewStatusBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -142,25 +140,22 @@ LRESULT CMainFrame::OnViewStatusBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	::ShowWindow(m_hWndStatusBar, bVisible ? SW_SHOWNOACTIVATE : SW_HIDE);
 	UISetCheck(ID_VIEW_STATUS_BAR, bVisible);
 	UpdateLayout();
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	CAboutDlg dlg;
-
-	
-
 	dlg.InitDDX(_webview_version, m_webviewprofile.browserDirectory, m_webviewprofile.userDataDirectory, m_webviewprofile.channel);
 	dlg.DoModal();
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnScenarioWebView2Modal(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	CDlgWebView2 dlg(m_webviewprofile.browserDirectory, m_webviewprofile.userDataDirectory, L"https://www.msdn.microsoft.com");
 	dlg.DoModal();
-	return 0;
+	return S_OK;
 }
 
 //setup.exe(under Webview installation directory) with following targets.
@@ -180,7 +175,7 @@ LRESULT CMainFrame::OnScenarioWebView2Modeless(WORD /*wNotifyCode*/, WORD /*wID*
 		m_dlgWebWiew2Modeless->Create(this->m_hWnd);
 		m_dlgWebWiew2Modeless->ShowWindow(SW_SHOW);
 	}
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnScenarioWebRequest(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -189,14 +184,13 @@ LRESULT CMainFrame::OnScenarioWebRequest(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	auto ret = webrequestdlg.DoModal();
 	if (ret == TRUE)
 	{
-
 		auto hr = m_webview2->WebRequest(webrequestdlg.get_uri(), webrequestdlg.get_verb(), webrequestdlg.get_data(), L"Content-Type: application/json");
 		if (FAILED(hr))
 		{
 			LOG_TRACE << "The WebView2 WebRequest failed | " << "message" << ": 0x" << std::hex << std::setw(8) << hr;			
 		}
 	}
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnScenarioInstallation(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -210,7 +204,7 @@ LRESULT CMainFrame::OnScenarioInstallation(WORD /*wNotifyCode*/, WORD /*wID*/, H
 		_snwprintf_s(message.data(), message.size(), _TRUNCATE,
 			L"WebView2 version %s is already installed.", version.c_str());
 		this->MessageBoxW(message.c_str(), L"Information", MB_OK | MB_ICONINFORMATION);
-		return 0;
+		return S_OK;
 	}
 	
 	// Download WebView2 boostrapper from the web.
@@ -222,7 +216,7 @@ LRESULT CMainFrame::OnScenarioInstallation(WORD /*wNotifyCode*/, WORD /*wID*/, H
 		_snwprintf_s(message.data(), message.size(), _TRUNCATE,
 			L"Failed to download the latest WebView2 version. Error code: 0x%08X", hr);
 		this->MessageBoxW(message.c_str(), L"Error", MB_OK | MB_ICONERROR);
-		return 0;
+		return S_OK;
 	}
 		
 	// Install WebView2 in per-user mode.
@@ -233,12 +227,12 @@ LRESULT CMainFrame::OnScenarioInstallation(WORD /*wNotifyCode*/, WORD /*wID*/, H
 		_snwprintf_s(message.data(), message.size(), _TRUNCATE,
 			L"Failed to install the latest WebView2 version. Error code: 0x%08X", hr);
 		this->MessageBoxW(message.c_str(), L"Error", MB_OK | MB_ICONERROR);
-		return 0;
+		return S_OK;
 	}		
 	this->MessageBoxW(L"Successfully installed the latest WebView2 version. "
 		L"Restart the application to refresh.",
 		L"Success", MB_OK | MB_ICONINFORMATION);
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnNavigate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -249,7 +243,7 @@ LRESULT CMainFrame::OnNavigate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	{		
 		m_webview2->navigate(text_url);
 	}
-	return 0;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -265,7 +259,7 @@ LRESULT CMainFrame::OnEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	{
 		m_webview2->copy();
 	}
-	return 0L;
+	return S_OK;
 }
 LRESULT CMainFrame::OnEditPaste(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
@@ -281,7 +275,7 @@ LRESULT CMainFrame::OnEditPaste(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	{
 		m_webview2->paste(webview_hwnd);
 	}
-	return 0L;
+	return S_OK;
 }
 LRESULT CMainFrame::OnEditCut(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
@@ -297,13 +291,13 @@ LRESULT CMainFrame::OnEditCut(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	{
 		m_webview2->cut();
 	}
-	return 0L;
+	return S_OK;
 }
 
 LRESULT CMainFrame::OnScenarioDetect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	CDetectDlg detectdlg;
 	auto ret = detectdlg.DoModal();
-	return 0L;
+	return S_OK;
 }
 

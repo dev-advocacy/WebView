@@ -6,7 +6,8 @@ typedef struct ProfileInformation
 	std::wstring  userDataDirectory;
 	std::wstring  channel;
 	std::wstring  version;
-
+	std::wstring  port;
+	bool isTest;
 
 } ProfileInformation_t;
 

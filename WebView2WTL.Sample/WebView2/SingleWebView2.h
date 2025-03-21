@@ -1,23 +1,4 @@
 #pragma once
-//class SingleWebView2
-//{
-//    public:
-//        SingleWebView2(SingleWebView2 const&) = delete;
-//        SingleWebView2& operator=(SingleWebView2 const&) = delete;
-//        ~SingleWebView2() {}
-//
-//        wil::com_ptr<ICoreWebView2Environment> get_webViewEnvironment();
-//        void set_webViewEnvironment(wil::com_ptr<ICoreWebView2Environment> CoreWebView2Environment);
-//        static SingleWebView2* get_instance();
-//
-//    private:
-//        explicit SingleWebView2();
-//    
-//    private:
-//    
-//        std::mutex m_mutex;        
-//        wil::com_ptr<ICoreWebView2Environment>	m_webViewEnvironment = nullptr;
-//};
 
 class SingleWebView2 
 {

@@ -12,7 +12,7 @@ namespace WebView2
 	class ContextData
 	{
 	public:
-		std::wstring m_classname = L"Chrome_WidgetWin_0";
+		std::wstring			m_classname = L"Chrome_WidgetWin_0";
 		HWND					m_hwnd = nullptr;
 	};
 	
@@ -24,6 +24,7 @@ namespace WebView2
 		std::wstring										m_browser_directory;
 		std::wstring										m_user_data_directory;
 		bool												m_is_modal = false;
+		bool												m_start = true;
 	private:
 		HWND												m_hwnd = nullptr;
 		wil::com_ptr<ICoreWebView2Environment>				m_webViewEnvironment = nullptr;
@@ -34,6 +35,8 @@ namespace WebView2
 		std::unique_ptr<webview2_authentication_events>		m_webview2_authentication_events = nullptr;
 		std::list<std::future<void>>						m_asyncResults;
 		std::mutex											m_asyncResultsMutex;
+		bool												m_is_test = false;
+		std::wstring										m_port;
 		HWND												m_hwnd_parent = nullptr;
 	public:
 		// Message map and handlers
@@ -50,6 +53,13 @@ namespace WebView2
 			m_webview2_events = std::make_unique<webview2_events>();
 			m_webview2_authentication_events = std::make_unique<webview2_authentication_events>();
 		};
+
+		void set_test(bool isTest, std::wstring port)
+		{
+			m_is_test = isTest;
+			m_port = port;
+		}
+
 		/// <summary>
 		/// Sets the parent window handle.
 		/// </summary>
@@ -184,11 +194,9 @@ namespace WebView2
 					wil::com_ptr<IStream> postDataStream = SHCreateMemStream(reinterpret_cast<const BYTE*>(postDataBytes.get()), sizeNeededForMultiByte);
 					auto hr = webviewEnvironment2->CreateWebResourceRequest(uri.c_str(), verb.c_str(), postDataStream.get(), contenttype.c_str(), &webResourceRequest);
 					wil::com_ptr<ICoreWebView2WebResourceRequest> WebRequest = webResourceRequest.get();				
-
 					wil::com_ptr<ICoreWebView2_2> webview2Ex;
 					RETURN_IF_FAILED(m_webView.get()->QueryInterface(IID_PPV_ARGS(&webview2Ex)));
 					RETURN_IF_FAILED(webview2Ex->NavigateWithWebResourceRequest(webResourceRequest.get()));
-
 				}
 			}
 			return hr;
@@ -262,8 +270,6 @@ namespace WebView2
 		{
 			return m_hwnd;
 		}
-
-
 		virtual void KeepAliveAsyncResult(std::future<void>&& result) override
 		{
 			// Need to keep alive future<void> instance until fire-and-forget async operation completes.
@@ -285,6 +291,16 @@ namespace WebView2
 			LOG_TRACE << __FUNCTION__;
 			LOG_TRACE << L"  success=" << isSuccess << L", ID=" << navigationId
 					  << L", error status=" << errorStatus;
+			
+			if (m_is_test == true && m_start == true)
+			{
+				T* pT = static_cast<T*>(this);
+				if (::IsWindow(pT->m_hWnd))
+				{
+					m_start = false;
+					std::cout << "WebView2 initialized" << std::endl;
+				}
+			}
 		}
 		virtual void ResponseReceivedEvent(std::wstring_view method, std::wstring_view uri) override
 		{
@@ -348,7 +364,7 @@ namespace WebView2
 
 			return S_OK;
 		}
-		
+
 		/// <summary>
 		/// Initializes the WebView2 control.
 		/// </summary>
@@ -359,26 +375,36 @@ namespace WebView2
 			LOG_TRACE << __FUNCTION__ << " Using browser directory:" << m_browser_directory.data();
 			auto options = Microsoft::WRL::Make<CoreWebView2EnvironmentOptions>();
 			HRESULT hr = S_OK;
+			std::wstring argbrowser;
 
+			if (m_is_test == true)
+			{
+				m_port = m_port.empty() ? L"9222" : m_port;
+				LOG_DEBUG << "Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=" << m_port;
+				argbrowser = L"--remote-debugging-port=" + m_port;
+			}
 			if (log == true)
 			{
 				fs::path unique_file;
 				if (!Utility::GetUniqueLogFileName(unique_file))
 				{
 					LOG_DEBUG << "Create unique log file for log-net-log filename: " << unique_file;
-
 					auto log = L"--log-net-log=" + unique_file.native();
-
-					hr = options->put_AdditionalBrowserArguments(log.c_str()); // Network logs include the network requests, responses, and details on any errors when loading files.
+					argbrowser += L" " + log;					
 				}
 				else
 				{
 					LOG_ERROR << "Failed to create unique log file name for log-net-log";
 				}
 			}
+			if (!argbrowser.empty())
+			{
+				hr = options->put_AdditionalBrowserArguments(argbrowser.c_str());
+				RETURN_IF_FAILED(hr);
+			}
 
 			auto webViewEnvironment = SingleWebView2::get().get_webViewEnvironment();
-
+			
 
 			if (webViewEnvironment == nullptr)
 			{
