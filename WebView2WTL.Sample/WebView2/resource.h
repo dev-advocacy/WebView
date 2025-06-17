@@ -12,6 +12,7 @@
 #define IDI_ICON_PIN                    207
 #define IDD_WEBREQUEST                  208
 #define IDD_DIALOG_DETECT               210
+#define IDD_DIALOG_COOKIE_DOMAIN        212
 #define IDC_PROGRESS1                   1000
 #define IDC_BUTTON_OK                   1001
 #define IDC_BUTTON_CANCEL               1002
@@ -32,6 +33,7 @@
 #define IDC_STATIC_BROWSER_DIRECTORY    1013
 #define IDC_EDIT1                       1013
 #define IDC_EDIT_INFO                   1013
+#define IDC_EDIT_DOMAIN                 1013
 #define IDC_STATIC_VERSION3             1014
 #define IDC_STATIC_BROWSER_USER_DATA    1015
 #define IDC_STATIC_VERSION4             1016
@@ -49,13 +51,20 @@
 #define ID_SCENARIO_WEBRESOURCEREQUEST  32781
 #define ID_SCENARIO_DETECT              32782
 #define IDC_PROGRESS_CONTROL            32783
+#define ID_SCENARIO_COOKIES             32783
+#define ID_COOKIES_WEBVIEW              32784
+#define ID_WEBVIEW_GETCOOKIES           32785
+#define ID_COOKIES_WININET              32786
+#define ID_WININET_GETCOOKIES           32787
+#define ID_WEBVIEW_GETCOOKIES32788      32788
+#define ID_WEBVIEW_GETCOOKIES_CONTAINER 32789
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        212
-#define _APS_NEXT_COMMAND_VALUE         32783
+#define _APS_NEXT_RESOURCE_VALUE        214
+#define _APS_NEXT_COMMAND_VALUE         32790
 #define _APS_NEXT_CONTROL_VALUE         1014
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

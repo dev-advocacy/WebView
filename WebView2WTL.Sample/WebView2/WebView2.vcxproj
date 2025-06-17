@@ -232,6 +232,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AboutDlg.cpp" />
+    <ClCompile Include="DomainDlg.cpp" />
     <ClCompile Include="DetectDlg.cpp" />
     <ClCompile Include="CertificateDlg.cpp" />
     <ClCompile Include="LogView.cpp" />
@@ -255,9 +256,12 @@
     <ClCompile Include="WebView2Main.cpp" />
     <ClCompile Include="WebViewDlg.cpp" />
     <ClCompile Include="WebViewProfile.cpp" />
+    <ClCompile Include="Wininet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="DomainDlg.h" />
+    <ClInclude Include="Cookie.h" />
     <ClInclude Include="DetectDlg.h" />
     <ClInclude Include="CertificateDlg.h" />
     <ClInclude Include="ClientCertificate.h" />
@@ -279,12 +283,13 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="WebRequestDlg.h" />
-    <ClInclude Include="WebView2Impl2.h" />
     <ClInclude Include="WebView2.h" />
+    <ClInclude Include="WebView2Impl2.h" />
     <ClInclude Include="WebViewAuthentication.h" />
     <ClInclude Include="WebViewDlg.h" />
     <ClInclude Include="WebViewEvents.h" />
     <ClInclude Include="WebViewProfile.h" />
+    <ClInclude Include="Wininet.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WebView2.rc" />

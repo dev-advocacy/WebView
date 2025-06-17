@@ -8,7 +8,7 @@
 #include "WebView2.h"
 #include "WebViewProfile.h"
 #include "WebViewDlg.h"
-#include "WebView2Impl2.h"
+#include "WebView2Impl.h"
 #include "UrlCombo.h"
 
 class CMainFrame : public CFrameWindowImpl<CMainFrame>, public CUpdateUI<CMainFrame>,public CMessageFilter, public CIdleHandler
@@ -50,6 +50,14 @@ public:
 		COMMAND_ID_HANDLER(ID_SCENARIO_WEBRESOURCEREQUEST, OnScenarioWebRequest)
 		COMMAND_ID_HANDLER(ID_SCENARIO_INSTALLATION, OnScenarioInstallation)
 		COMMAND_ID_HANDLER(ID_SCENARIO_DETECT, OnScenarioDetect)
+
+		COMMAND_ID_HANDLER(ID_WEBVIEW_GETCOOKIES, OnScenarioWebViewGetCookies)
+		COMMAND_ID_HANDLER(ID_WININET_GETCOOKIES, OnScenarioWininetGetCookies)
+
+		COMMAND_ID_HANDLER(ID_WEBVIEW_GETCOOKIES_CONTAINER, OnScenarioWebViewGetCookiesContainer)
+		
+		
+
 		MESSAGE_HANDLER(MSG_NAVIGATE_CALLBACK, OnNavigate)
 		REFLECT_NOTIFICATIONS()
 		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
@@ -75,6 +83,12 @@ public:
 	LRESULT OnNavigate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnScenarioInstallation(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnScenarioWebRequest(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+
+	LRESULT OnScenarioWebViewGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnScenarioWininetGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);	
+	LRESULT OnScenarioWebViewGetCookiesContainer(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+
+	
 
 	LRESULT OnScenarioDetect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 

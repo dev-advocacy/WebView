@@ -99,6 +99,12 @@
     <ClCompile Include="DetectDlg.cpp">
       <Filter>Source Files\Dialogs</Filter>
     </ClCompile>
+    <ClCompile Include="Wininet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DomainDlg.cpp">
+      <Filter>Source Files\Dialogs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -139,9 +145,6 @@
     </ClInclude>
     <ClInclude Include="Thread.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WebView2Impl2.h">
-      <Filter>Header Files\WebView2\WebView2Impl</Filter>
     </ClInclude>
     <ClInclude Include="CompositionHost.h">
       <Filter>Header Files\WebView2\WebView2Impl</Filter>
@@ -184,6 +187,18 @@
     </ClInclude>
     <ClInclude Include="EdgeInfomation.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Wininet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebView2Impl2.h">
+      <Filter>Header Files\WebView2\WebView2Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Cookie.h">
+      <Filter>Header Files\WebView2\WebView2Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="DomainDlg.h">
+      <Filter>Header Files\Dialogs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

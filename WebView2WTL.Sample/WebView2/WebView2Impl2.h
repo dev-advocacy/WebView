@@ -1,7 +1,9 @@
 #pragma once
 #include "pch.h"
 #include "resource.h"
+#include "headersprop.h"
 #include "logger.h"
+#include "Cookie.h"
 #include "CompositionHost.h"
 #include "WebViewEvents.h"
 #include "WebViewAuthentication.h"
@@ -9,6 +11,8 @@
 
 namespace WebView2
 {
+	// Add this struct at the top or in a suitable header
+
 	class ContextData
 	{
 	public:
@@ -30,6 +34,8 @@ namespace WebView2
 		wil::com_ptr<ICoreWebView2Environment>				m_webViewEnvironment = nullptr;
 		wil::com_ptr<ICoreWebView2CompositionController>	m_compositionController = nullptr;
 		wil::com_ptr<ICoreWebView2Controller>				m_controller = nullptr;
+		wil::com_ptr<ICoreWebView2Settings>					m_webSettings = nullptr;
+		wil::com_ptr<ICoreWebView2CookieManager>			m_cookieManager = nullptr;
 		wil::com_ptr<ICoreWebView2>							m_webView = nullptr;
 		std::unique_ptr<webview2_events>					m_webview2_events = nullptr;
 		std::unique_ptr<webview2_authentication_events>		m_webview2_authentication_events = nullptr;
@@ -158,7 +164,88 @@ namespace WebView2
 
 			return S_OK;
 		}
+		HRESULT getcookies(std::wstring uri)
+		{
+			get_cookies(uri);
+			return S_OK;
+		}
+		HRESULT getcookies()
+		{
 
+			get_cookies_by_devtools();
+			return S_OK;
+		}
+
+		HRESULT add_cookie(std::wstring domain, std::wstring name, std::wstring value)
+		{
+			LOG_TRACE << __FUNCTION__ << L" domain=" << domain << L" name=" << name << L" value=" << value;
+			RETURN_IF_NULL_ALLOC(m_cookieManager);
+			wil::com_ptr<ICoreWebView2Cookie> cookie;
+			HRESULT hr = m_cookieManager->CreateCookie(name.c_str(), value.c_str(), domain.c_str(), L"/", &cookie);
+			RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+
+			//cookie->put_IsHttpOnly(TRUE);
+			cookie->put_IsSecure(TRUE);
+
+			hr = m_cookieManager->AddOrUpdateCookie(cookie.get());
+			RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+			return S_OK;
+		}
+		HRESULT delete_all_cookies()
+		{
+			LOG_TRACE << __FUNCTION__;
+			RETURN_IF_NULL_ALLOC(m_cookieManager);
+			HRESULT hr = m_cookieManager->DeleteAllCookies();
+			RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+			return true;
+		}
+
+		HRESULT get_cookies(std::wstring uri)
+		{
+			RETURN_IF_NULL_ALLOC(m_cookieManager);
+			HRESULT hr = m_cookieManager->GetCookies(uri.c_str(), Microsoft::WRL::Callback<ICoreWebView2GetCookiesCompletedHandler>([this, uri](HRESULT error_code, ICoreWebView2CookieList* list) -> HRESULT
+				{
+					if (SUCCEEDED(error_code))
+					{
+						std::wstring result;
+						UINT cookie_list_size;
+						RETURN_IF_FAILED(list->get_Count(&cookie_list_size));
+						if (cookie_list_size == 0)
+						{
+							result += L"No cookies found.";
+						}
+						else
+						{
+							result += std::to_wstring(cookie_list_size) + L" cookie(s) found";
+							if (!uri.empty())
+							{
+								result += L" on " + uri;
+							}
+							result += L"\n[";
+							for (UINT i = 0; i < cookie_list_size; ++i)
+							{
+								wil::com_ptr<ICoreWebView2Cookie> cookie;
+								RETURN_IF_FAILED(list->GetValueAtIndex(i, &cookie));
+
+								if (cookie.get())
+								{
+									result += Utility::CookieToString(cookie.get());
+									if (i != cookie_list_size - 1)
+									{
+										result += L",\n";
+									}
+								}
+							}
+							result += L"]";
+						}
+						LOG_TRACE << result;
+					}
+					return error_code;
+				}
+			).Get());
+			RETURN_IF_FAILED(hr);
+			return S_OK;
+		}
 		HRESULT getpostData(std::wstring postData, std::unique_ptr<char[]>& postDataBytes,int& sizeNeededForMultiByte)
 		{
 			
@@ -170,7 +257,6 @@ namespace WebView2
 			}
 			return S_OK;
 		}
-
 		HRESULT WebRequest(std::wstring uri, std::wstring verb, std::wstring data,std::wstring contenttype)
 		{
 			HRESULT hr = S_OK;
@@ -201,8 +287,6 @@ namespace WebView2
 			}
 			return hr;
 		}
-
-
 		std::wstring GetPreviewOfContent(IStream* content, bool& readAll)
 		{
 			char buffer[50];
@@ -265,6 +349,124 @@ namespace WebView2
 		}
 		#pragma endregion WebView2_event
 
+		inline std::wstring ToReadableDateTime(const std::wstring& wtimestamp)
+		{
+			// Convert std::wstring to std::string (UTF-8) using WideCharToMultiByte
+			int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wtimestamp.c_str(), -1, nullptr, 0, nullptr, nullptr);
+			std::string timestamp_str;
+			if (utf8Len > 0) {
+				timestamp_str.resize(utf8Len - 1); // exclude null terminator
+				WideCharToMultiByte(CP_UTF8, 0, wtimestamp.c_str(), -1, &timestamp_str[0], utf8Len, nullptr, nullptr);
+			}
+			else {
+				return wtimestamp;
+			}
+
+			// Convert string to double
+			double timestamp = 0.0;
+			try {
+				timestamp = std::stod(timestamp_str);
+			}
+			catch (...) {
+				return wtimestamp;
+			}
+
+			// Separate into seconds and fractional part
+			std::time_t seconds = static_cast<std::time_t>(timestamp);
+			double fractional = timestamp - seconds;
+
+			// Convert to UTC time
+			std::tm tm{};
+			gmtime_s(&tm, &seconds);
+
+			// Format time into std::string
+			std::ostringstream oss;
+			oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+			oss << "." << std::setw(6) << std::setfill('0') << static_cast<int>(fractional * 1'000'000) << " UTC";
+			std::string formatted_time_str = oss.str();
+
+			// Convert std::string (UTF-8) to std::wstring using MultiByteToWideChar
+			int wlen = MultiByteToWideChar(CP_UTF8, 0, formatted_time_str.c_str(), -1, nullptr, 0);
+			std::wstring formatted_time;
+			if (wlen > 0) {
+				formatted_time.resize(wlen - 1); // exclude null terminator
+				MultiByteToWideChar(CP_UTF8, 0, formatted_time_str.c_str(), -1, &formatted_time[0], wlen);
+			}
+			else {
+				return wtimestamp;
+			}
+
+			return formatted_time;
+
+		}
+
+		HRESULT process_cookie_dev_tools(PCWSTR resultJson)
+		{
+			std::vector<Cookie> cookies;
+			utility::stringstream_t jsonCookieArray;
+			jsonCookieArray << resultJson;
+			web::json::value jsonCookieArrayValue = web::json::value::parse(jsonCookieArray);
+			if (jsonCookieArrayValue.is_object() == true)
+			{
+				for (auto iter = std::begin(jsonCookieArrayValue.as_object()); iter != std::end(jsonCookieArrayValue.as_object()); ++iter)
+				{
+					std::wstring name = iter->first;
+					web::json::value cookiecoll = iter->second;
+					if (cookiecoll.is_array())
+					{
+						for (auto& cookieVal : cookiecoll.as_array())
+						{
+							if (cookieVal.is_object())
+							{
+								Cookie cookie;
+								cookie.name = cookieVal[NAME_PROP].as_string();
+								cookie.value = cookieVal[VALUE_PROP].as_string();
+								cookie.domain = cookieVal[DOMAIN_PROP].as_string();
+								cookie.path = cookieVal[PATH_PROP].as_string();
+								cookie.expires = cookieVal[EXPIRES_PROP].serialize();
+								cookie.expiresReadable = ToReadableDateTime(cookieVal[EXPIRES_PROP].is_string()
+									? cookieVal[EXPIRES_PROP].as_string()
+									: cookieVal[EXPIRES_PROP].serialize());
+								cookie.httpOnly = cookieVal.has_field(L"httpOnly") ? cookieVal[L"httpOnly"].as_bool() : false;
+								cookie.secure = cookieVal.has_field(L"secure") ? cookieVal[L"secure"].as_bool() : false;
+								// Add more fields as needed
+
+								cookies.push_back(cookie);
+								
+								std::wstring s = std::format(
+									L"domain:{0} expire:{1} expiresReadable:{2} path:{3} name={4} value={5} httpOnly={6} secure={7}",
+									cookie.domain, cookie.expires, cookie.expiresReadable, cookie.path, cookie.name, cookie.value,
+									cookie.httpOnly ? L"true" : L"false", cookie.secure ? L"true" : L"false");
+								LOG_TRACE << s;
+							}
+						}
+					}					
+				}
+			}
+			if (m_webview2_events)
+				m_webview2_events->raise_cookies_received_event(cookies);
+
+			return S_OK;
+		}
+		HRESULT get_cookies_by_devtools()
+		{
+			LOG_TRACE << __FUNCTION__;
+			RETURN_IF_NULL_ALLOC(m_webSettings);
+			wil::com_ptr<ICoreWebView2DevToolsProtocolEventReceiver> receiver;
+			RETURN_IF_FAILED(m_webView->GetDevToolsProtocolEventReceiver(L"Network.getAllCookies", &receiver));
+			HRESULT hr = m_webView->CallDevToolsProtocolMethod(L"Network.getAllCookies", L"{}", Microsoft::WRL::Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>([this](HRESULT error, PCWSTR resultJson) -> HRESULT
+				{
+					if (SUCCEEDED(error))
+					{
+						error = process_cookie_dev_tools(resultJson);
+					}
+					return error;
+				}
+			).Get());
+			RETURN_IF_FAILED(hr);
+			return S_OK;
+		}
+
 		// Implement IWebWiew2ImplEventCallback
 		virtual HWND GetHWnd() override
 		{
@@ -318,6 +520,10 @@ namespace WebView2
 		{
 			LOG_TRACE << __FUNCTION__;
 		}
+		virtual void OnCookiesReceived(const std::vector<Cookie>& cookies) override
+		{
+			LOG_TRACE << __FUNCTION__;
+		}
 	private:
 
 		/// <summary>
@@ -355,6 +561,17 @@ namespace WebView2
 			RETURN_IF_FAILED(m_webview2_events->initialize(this, m_webView, m_controller, m_hwnd_parent));
 			RETURN_IF_FAILED(m_webview2_authentication_events->initialize(m_hwnd, m_webView, m_controller));
 			RETURN_IF_FAILED((static_cast<T*>(this))->initialize(m_hwnd, m_controller, m_compositionController));
+
+
+			if (m_webView != nullptr)
+			{
+				RETURN_IF_FAILED(m_webView->get_Settings(&m_webSettings));
+
+				wil::com_ptr<ICoreWebView2_2> WebView2;
+				RETURN_IF_FAILED(m_webView->QueryInterface(IID_PPV_ARGS(&WebView2)));
+				RETURN_IF_FAILED(WebView2->get_CookieManager(&m_cookieManager));
+			}
+
 			CRect bounds;
 			GetClientRect(m_hwnd , &bounds);
 

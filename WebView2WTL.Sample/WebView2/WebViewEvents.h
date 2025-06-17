@@ -92,8 +92,10 @@ namespace WebView2
 		virtual void ResponseReceivedEvent(std::wstring_view method, std::wstring_view uri) = 0;
 		virtual void RequestEvent(std::wstring_view method, std::wstring_view uri,
 								  COREWEBVIEW2_WEB_RESOURCE_CONTEXT resourceContext) = 0;
-
 		virtual void ClientCertificateRequestedEvent(std::vector<ClientCertificate> clientCertificates, wil::com_ptr<ICoreWebView2Deferral> deferral) = 0;
+
+		virtual void OnCookiesReceived(const std::vector<Cookie>& cookies) = 0;
+
 	};
 	
 	
@@ -177,6 +179,26 @@ namespace WebView2
 
 			return S_OK;
 		}
+		
+		void raise_cookies_received_event(const std::vector<Cookie>& cookies)
+		{
+			if (m_callback == nullptr)
+				return;
+
+			auto asyncResult = std::async(std::launch::async, [=, this]()
+				{
+					UIFunctor functor([&, this]()
+						{
+							m_callback->OnCookiesReceived(cookies);
+						});
+
+					functor.PostToQueue(m_callback->GetHWnd());
+				});
+
+			// Keep the async result alive until completion
+			m_callback->KeepAliveAsyncResult(std::move(asyncResult));
+		}
+
 	private:
 		/// <summary>
 		/// 
@@ -186,6 +208,11 @@ namespace WebView2
 		{
 			//LOG_TRACE << __FUNCTION__;
 		}
+
+
+		
+
+
 		/// <summary>
 		/// Raises the web resource response received event.
 		/// </summary>

@@ -115,6 +115,18 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Installation",                ID_SCENARIO_INSTALLATION
         MENUITEM "Detect",                      ID_SCENARIO_DETECT
+        POPUP "Cookies"
+        BEGIN
+            POPUP "WebView"
+            BEGIN
+                MENUITEM "GetCookies (DevTools)",       ID_WEBVIEW_GETCOOKIES
+                MENUITEM "GetCookies (Cookie container)", ID_WEBVIEW_GETCOOKIES_CONTAINER
+            END
+            POPUP "Wininet"
+            BEGIN
+                MENUITEM "GetCookies",                  ID_WININET_GETCOOKIES
+            END
+        END
     END
     POPUP "&Help"
     BEGIN
@@ -215,6 +227,17 @@ BEGIN
     EDITTEXT        IDC_EDIT_INFO,69,33,192,47,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY
 END
 
+IDD_DIALOG_COOKIE_DOMAIN DIALOGEX 0, 0, 270, 51
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,155,30,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,213,30,50,14
+    LTEXT           "Domain name :",IDC_STATIC,7,7,52,8
+    EDITTEXT        IDC_EDIT_DOMAIN,78,7,185,14,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -266,6 +289,14 @@ BEGIN
         RIGHTMARGIN, 315
         TOPMARGIN, 7
         BOTTOMMARGIN, 98
+    END
+
+    IDD_DIALOG_COOKIE_DOMAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 263
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 44
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -359,6 +390,11 @@ BEGIN
 END
 
 IDD_DIALOG_DETECT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DIALOG_COOKIE_DOMAIN AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
