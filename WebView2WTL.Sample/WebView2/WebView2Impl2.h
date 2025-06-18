@@ -7,6 +7,7 @@
 #include "CompositionHost.h"
 #include "WebViewEvents.h"
 #include "WebViewAuthentication.h"
+#include "Wininet.h"
 #include "SingleWebView2.h"
 
 namespace WebView2
@@ -163,6 +164,16 @@ namespace WebView2
 				return ERROR_INVALID_ADDRESS;
 			return S_OK;
 		}
+
+		HRESULT getwininetcookies(std::wstring uri)
+		{
+			os::Wininet wininet;
+
+			wininet.GetCookies(uri);
+
+			return S_OK;
+		}
+
 		HRESULT getcookies(std::wstring uri)
 		{
 			get_cookies(uri);

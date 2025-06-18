@@ -17,6 +17,9 @@ namespace os
 		std::vector<std::wstring> GetAllCookies(const std::wstring& url);
 		
 		static bool SyncCookie(const std::wstring& url, const std::wstring& cookieName, const std::wstring& cookieValue);
+
+		void GetCookies(const std::wstring& url);
+
 	private:
 		static bool VerifyCookie2(const INTERNET_COOKIE2& cookie2, bool allowExpired = false);
 		static bool SetCookieUsingInternetSetCookieEx(const std::wstring& url, const INTERNET_COOKIE2& cookie2);

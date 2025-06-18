@@ -308,7 +308,6 @@ LRESULT CMainFrame::OnScenarioWebViewGetCookies(WORD /*wNotifyCode*/, WORD /*wID
 LRESULT CMainFrame::OnScenarioWebViewGetCookiesContainer(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	CDomainDlg dlg;
-
 	INT_PTR result = dlg.DoModal();
 
 	if (result == IDOK) 
@@ -320,7 +319,17 @@ LRESULT CMainFrame::OnScenarioWebViewGetCookiesContainer(WORD /*wNotifyCode*/, W
 }
 LRESULT CMainFrame::OnScenarioWininetGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
+	CDomainDlg dlg;
+	INT_PTR result = dlg.DoModal();
+
+	if (result == IDOK)
+	{
+		auto domain = dlg.GetDomain();
+		m_webview2->getwininetcookies(domain);
+	}
 	return S_OK;
+
+
 }
 
 LRESULT CMainFrame::OnScenarioWebViewDeleteAllCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)

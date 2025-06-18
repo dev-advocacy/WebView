@@ -144,7 +144,6 @@ namespace os
 		else if (cookie2.dwFlags & 0x00002000) { // INTERNET_COOKIE_SAME_SITE_NONE
 			cookieData += L"; SameSite=None";
 		}
-		SetLastError(0); // Reset last error before calling API
 		// Call InternetSetCookieExW
 		DWORD cookie_set = ::InternetSetCookieExW(
 			url.c_str(),
@@ -308,6 +307,39 @@ namespace os
 			return buffer;
 		}
 		return L"";
+	}
+
+	void Wininet::GetCookies(const std::wstring& url)
+	{ 
+		// get all cookies using InternetGetCookieEx2
+
+		DWORD size = 0;
+		INTERNET_COOKIE2 *cookie2 = nullptr;
+		if (InternetGetCookieEx2(url.c_str(), nullptr, 0, &cookie2 , &size ) == ERROR_SUCCESS)
+		{
+			// dump all cookies
+			LOG_TRACE << __FUNCTION__ << L" InternetGetCookieEx2 returned " << size / sizeof(INTERNET_COOKIE2) << L" cookies.";
+			for (DWORD i = 0; i < size ; ++i)
+			{
+				const INTERNET_COOKIE2& cookie = cookie2[i];
+				LOG_TRACE << L"Cookie " << i + 1 << L": Name=" << (cookie.pwszName ? cookie.pwszName : L"")
+					<< L", Value=" << (cookie.pwszValue ? cookie.pwszValue : L"")
+					<< L", Domain=" << (cookie.pwszDomain ? cookie.pwszDomain : L"")
+					<< L", Path=" << (cookie.pwszPath ? cookie.pwszPath : L"")
+					<< L", Expires=" << (cookie.fExpiresSet ? std::to_wstring(cookie.ftExpires.dwLowDateTime) : L"Not Set")
+					<< L", Flags=" << cookie.dwFlags;
+			}
+			// Free the allocated memory for cookies
+			if (cookie2)
+			{
+				InternetFreeCookies(cookie2, size);
+			}
+		}
+		else
+		{
+			DWORD dwError = GetLastError();
+			LOG_TRACE << __FUNCTION__ << L" InternetGetCookieEx2 failed with error code: " << dwError;
+		}
 	}
 
 	bool Wininet::SetCookie(const std::wstring& url, const std::wstring& cookieName, const std::wstring& cookieValue, const std::wstring& options)
