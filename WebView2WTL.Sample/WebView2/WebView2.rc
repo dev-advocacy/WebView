@@ -121,6 +121,8 @@ BEGIN
             BEGIN
                 MENUITEM "GetCookies (DevTools)",       ID_WEBVIEW_GETCOOKIES
                 MENUITEM "GetCookies (Cookie container)", ID_WEBVIEW_GETCOOKIES_CONTAINER
+                MENUITEM "DeleteAllCookies",            ID_WEBVIEW_DELETEALLCOOKIES
+                MENUITEM "Show DevTools",               ID_WEBVIEW_SHOWDEVTOOLS
             END
             POPUP "Wininet"
             BEGIN

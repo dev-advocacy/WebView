@@ -15,9 +15,10 @@ namespace os
 		static bool DeleteCookie(const std::wstring& url, const std::wstring& cookieName);
 		// Gets all cookies for the specified URL.
 		std::vector<std::wstring> GetAllCookies(const std::wstring& url);
-
-		// Gets all cookies for the current user (all domains) using WinINet enumeration.
-		static std::vector<std::wstring> GetAllCookiesNoDomain();
+		
+		static bool SyncCookie(const std::wstring& url, const std::wstring& cookieName, const std::wstring& cookieValue);
+	private:
+		static bool VerifyCookie2(const INTERNET_COOKIE2& cookie2, bool allowExpired = false);
+		static bool SetCookieUsingInternetSetCookieEx(const std::wstring& url, const INTERNET_COOKIE2& cookie2);
 	};
-
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Utility.h"
+#include "Wininet.h"
 #include "logger.h"
 
 //				RETURN_IF_FAILED_MSG(ERROR_INVALID_PARAMETER, "message = %ls, hr = %d", A2W(std::system_category().message(ERROR_INVALID_PARAMETER).data()), ERROR_INVALID_PARAMETER);
@@ -32,7 +33,7 @@ namespace WebView2
 		{
 			USES_CONVERSION;
 
-			
+
 
 			if (!::IsWindow(hwnd) || webviewEventSource == nullptr || controllerEventSource == nullptr)
 			{
@@ -65,11 +66,63 @@ namespace WebView2
 			LOG_TRACE << __FUNCTION__;
 		}
 
+		HRESULT trace_cookies_event(wil::com_ptr <ICoreWebView2WebResourceResponseReceivedEventArgs> args)
+		{
+			wil::com_ptr<ICoreWebView2WebResourceRequest> request;
+			RETURN_IF_FAILED(args->get_Request(&request));
+
+			wil::com_ptr<ICoreWebView2WebResourceResponseView> response;
+			RETURN_IF_FAILED(args->get_Response(&response));
+
+			wil::com_ptr<ICoreWebView2HttpResponseHeaders> responseHeaders;
+			RETURN_IF_FAILED(response->get_Headers(&responseHeaders));
+
+
+			wil::com_ptr<ICoreWebView2HttpHeadersCollectionIterator> iterator;
+			RETURN_IF_FAILED(responseHeaders->GetIterator(&iterator));
+			
+			//BOOL hasCurrent = FALSE;
+			//LOG_TRACE << "Dumping all headers for debugging purposes:";
+			//while (SUCCEEDED(iterator->get_HasCurrentHeader(&hasCurrent)) && hasCurrent)
+			//{
+			//	wil::unique_cotaskmem_string headerName;
+			//	wil::unique_cotaskmem_string headerValue;
+			//	RETURN_IF_FAILED(iterator->GetCurrentHeader(&headerName, &headerValue));
+			//	LOG_TRACE << __FUNCTION__ << " Header: " << headerName.get() << " Value: " << headerValue.get();
+			//	RETURN_IF_FAILED(iterator->MoveNext(&hasCurrent));
+			//}
+
+			wil::com_ptr<ICoreWebView2HttpHeadersCollectionIterator> it;
+			if (responseHeaders->GetHeaders(L"set-cookie", &it) == S_OK)
+			{
+				BOOL hasNext;				
+				wil::unique_cotaskmem_string uri;
+				RETURN_IF_FAILED(request->get_Uri(&uri));
+				// Dump all Set-Cookie headers
+				//LOG_TRACE << "Dumping all Set-Cookie headers:";
+
+				for (it->get_HasCurrentHeader(&hasNext); hasNext; it->MoveNext(&hasNext))
+				{
+					wil::unique_cotaskmem_string name, value;
+					it->GetCurrentHeader(&name, &value);
+					// dump values
+
+					os::Wininet wininet;
+
+					wininet.SyncCookie(uri.get(), name.get(), value.get());
+
+					//LOG_TRACE << __FUNCTION__ << " uri:" << uri.get() << " Set-Cookie Header: " << name.get() << " Value: " << value.get();
+				}
+			}			
+			return S_OK;
+		}
+
+
 		HRESULT trace_authentication_event(wil::com_ptr <ICoreWebView2WebResourceResponseReceivedEventArgs> args)
 		{
 			wil::com_ptr<ICoreWebView2WebResourceRequest> request;
 			RETURN_IF_FAILED(args->get_Request(&request));
-			
+
 			wil::unique_cotaskmem_string uri;
 			RETURN_IF_FAILED(request->get_Uri(&uri));
 
@@ -90,6 +143,7 @@ namespace WebView2
 				ICoreWebView2WebResourceResponseReceivedEventArgs* args)	-> HRESULT
 				{
 					trace_authentication_event(args);
+					trace_cookies_event(args);
 					return S_OK;
 
 				}).Get(), &m_webResourceResponseReceivedToken));
@@ -107,7 +161,7 @@ namespace WebView2
 					return S_OK;
 
 				}).Get(), &m_basicAuthenticationRequestedToken));
-			return S_OK;			
-		}		
+			return S_OK;
+		}
 	};
 }

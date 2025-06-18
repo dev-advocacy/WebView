@@ -53,10 +53,10 @@ public:
 
 		COMMAND_ID_HANDLER(ID_WEBVIEW_GETCOOKIES, OnScenarioWebViewGetCookies)
 		COMMAND_ID_HANDLER(ID_WININET_GETCOOKIES, OnScenarioWininetGetCookies)
-
 		COMMAND_ID_HANDLER(ID_WEBVIEW_GETCOOKIES_CONTAINER, OnScenarioWebViewGetCookiesContainer)
-		
-		
+
+		COMMAND_ID_HANDLER(ID_WEBVIEW_DELETEALLCOOKIES, OnScenarioWebViewDeleteAllCookies)
+		COMMAND_ID_HANDLER(ID_WEBVIEW_SHOWDEVTOOLS, OnScenarioWebViewShowDevTools)
 
 		MESSAGE_HANDLER(MSG_NAVIGATE_CALLBACK, OnNavigate)
 		REFLECT_NOTIFICATIONS()
@@ -83,15 +83,13 @@ public:
 	LRESULT OnNavigate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnScenarioInstallation(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnScenarioWebRequest(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
 	LRESULT OnScenarioWebViewGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnScenarioWininetGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);	
 	LRESULT OnScenarioWebViewGetCookiesContainer(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
-	
-
 	LRESULT OnScenarioDetect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+	LRESULT OnScenarioWebViewDeleteAllCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnScenarioWebViewShowDevTools(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	
 private:
 	std::wstring _webview_version;

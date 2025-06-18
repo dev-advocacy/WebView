@@ -322,3 +322,15 @@ LRESULT CMainFrame::OnScenarioWininetGetCookies(WORD /*wNotifyCode*/, WORD /*wID
 {
 	return S_OK;
 }
+
+LRESULT CMainFrame::OnScenarioWebViewDeleteAllCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	m_webview2->clearcookies();
+	return S_OK;
+}
+
+LRESULT CMainFrame::OnScenarioWebViewShowDevTools(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{	
+	m_webview2->showdevtools();
+	return S_OK;
+}

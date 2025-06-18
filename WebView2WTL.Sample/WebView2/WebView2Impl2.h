@@ -161,7 +161,6 @@ namespace WebView2
 			}
 			else
 				return ERROR_INVALID_ADDRESS;
-
 			return S_OK;
 		}
 		HRESULT getcookies(std::wstring uri)
@@ -171,9 +170,25 @@ namespace WebView2
 		}
 		HRESULT getcookies()
 		{
-
 			get_cookies_by_devtools();
 			return S_OK;
+		}
+		HRESULT showdevtools()
+		{
+			LOG_TRACE << __FUNCTION__;
+
+			HRESULT hr= m_webView->OpenDevToolsWindow();
+
+			RETURN_IF_FAILED_MSG(hr, "Failed to delete all cookies, hr = % d", hr);
+			return (hr);
+		}
+
+		HRESULT clearcookies()
+		{
+			LOG_TRACE << __FUNCTION__;
+			RETURN_IF_NULL_ALLOC(m_cookieManager);
+			HRESULT hr = m_cookieManager->DeleteAllCookies();
+			return (hr);
 		}
 
 		HRESULT add_cookie(std::wstring domain, std::wstring name, std::wstring value)
