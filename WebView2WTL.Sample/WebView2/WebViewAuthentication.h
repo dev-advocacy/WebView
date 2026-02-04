@@ -59,11 +59,11 @@ namespace WebView2
 
 		void trace_webresource_basic_authentication_event()
 		{
-			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 		}
 		void raise_webresource_basic_authentication_event()
 		{
-			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 		}
 
 		HRESULT trace_cookies_event(wil::com_ptr <ICoreWebView2WebResourceResponseReceivedEventArgs> args)
@@ -131,7 +131,7 @@ namespace WebView2
 			wil::unique_cotaskmem_string authHeaderValue;
 			if (requestHeaders->GetHeader(L"Authorization", &authHeaderValue) == S_OK)
 			{
-				LOG_TRACE << __FUNCTION__ << " uri:" << uri.get() << " Authorization header:" << authHeaderValue.get();
+				LOG_TRACE(std::string(__FUNCTION__) + " uri:" + WideToNarrow(uri.get()) + " Authorization header:" + WideToNarrow(authHeaderValue.get()));
 			}
 			return S_OK;
 		}
@@ -152,7 +152,7 @@ namespace WebView2
 
 		HRESULT enable_basic_authentication()
 		{
-			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 			RETURN_IF_FAILED(m_webviewEventSource3->add_BasicAuthenticationRequested(Microsoft::WRL::Callback<ICoreWebView2BasicAuthenticationRequestedEventHandler>([this](
 				ICoreWebView2* sender,
 				ICoreWebView2BasicAuthenticationRequestedEventArgs* args) 	-> HRESULT

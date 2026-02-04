@@ -235,13 +235,15 @@
     <ClCompile Include="DomainDlg.cpp" />
     <ClCompile Include="DetectDlg.cpp" />
     <ClCompile Include="CertificateDlg.cpp" />
+    <ClCompile Include="logger_impl.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="LogView.cpp" />
     <ClCompile Include="SingleWebView2.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="UrlCombo.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="CheckFailure.cpp" />
-    <ClCompile Include="logger.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="osutility.cpp" />
     <ClCompile Include="pch.cpp">
@@ -260,6 +262,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="CommandLineParser.h" />
     <ClInclude Include="DomainDlg.h" />
     <ClInclude Include="Cookie.h" />
     <ClInclude Include="DetectDlg.h" />
@@ -301,6 +304,11 @@
     <Image Include="res\WebView2.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BOOST_REMOVAL_SUMMARY.md" />
+    <None Include="ConvertAllLogCalls.ps1" />
+    <None Include="ConvertLogCalls.ps1" />
+    <None Include="FINAL_LOG_CONVERSION_INSTRUCTIONS.md" />
+    <None Include="FIX_ALL_LOGS.ps1" />
     <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>

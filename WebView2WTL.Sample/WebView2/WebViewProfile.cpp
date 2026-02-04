@@ -2,66 +2,66 @@
 #include "logger.h"
 #include "utility.h"
 #include "WebViewProfile.h"
+#include "CommandLineParser.h"
 
 HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 {
-	LOG_TRACE << __FUNCTION__;
+	LOG_TRACE(__FUNCTION__);
 
-	int         argc = 0;
+	int argc = 0;
 	LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
 		
-	po::options_description desc("Allowed options");
-	desc.add_options()
-		("help", "produce help message")
-		("version", po::wvalue<std::wstring>(), "set WebView version")
-		("channel", po::wvalue<std::wstring>(), "set WebView2 channel, beta, dev, canary or fixed \"\" for stable channel")
-		("test", "start the WebView2 in test mode")
-		("port", po::wvalue<std::wstring>(), "specify a communication port for the test")
-		("root", po::wvalue<std::wstring>(), "User-provided WebView2 root folder");
+	CommandLineParser parser;
+	parser.AddOption("help", "produce help message");
+	parser.AddOption("version", "set WebView version (format: x.y.z.t)");
+	parser.AddOption("channel", "set WebView2 channel: beta, dev, canary, or fixed (empty for stable)");
+	parser.AddOption("test", "start the WebView2 in test mode");
+	parser.AddOption("port", "specify a communication port for the test");
+	parser.AddOption("root", "User-provided WebView2 root folder");
 
-	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, desc), vm);
-	po::notify(vm);
+	parser.Parse(argc, argv);
 
-	if (vm.count("help")) 
+	if (parser.HasOption(L"help")) 
 	{	
-		std::stringstream ss;
-		ss << desc;
-		MessageBox(nullptr, CA2T(ss.str().data()).m_psz, L"Help", MB_ICONINFORMATION);
-		return 0;
+		std::string helpMsg = parser.GetHelpMessage();
+		MessageBox(nullptr, CA2T(helpMsg.c_str()).m_psz, L"Help", MB_ICONINFORMATION);
+		return S_OK;
 	}
 
-	std::wstring_view webView2Version = L"";
-	if (vm.count("version"))
+	std::wstring webView2Version = L"";
+	if (parser.HasOption(L"version"))
 	{   // Assume first argument is WebView2 version to use, in the format "x.y.z.t".
-		webView2Version = vm["version"].as<std::wstring>();
-		LOG_TRACE << "User-provided WebView2 version=" << webView2Version.data();
+		webView2Version = parser.GetValueOr(L"version", L"");
+		LOG_TRACE(std::string("User-provided WebView2 version=") + WideToNarrow(webView2Version));
 	}	
-	std::wstring_view webView2Channel = L"";
-	if (vm.count("channel"))
-	{   // Assume second argument is WebView2 channel to use: "beta", "dev", "canary" or  "fixed" "" for stable channel.
-		webView2Channel = vm["channel"].as<std::wstring>();
-		LOG_TRACE << "User-provided WebView2 channel=" << webView2Channel.data();
+	
+	std::wstring webView2Channel = L"";
+	if (parser.HasOption(L"channel"))
+	{   // Assume second argument is WebView2 channel to use: "beta", "dev", "canary" or "fixed" "" for stable channel.
+		webView2Channel = parser.GetValueOr(L"channel", L"");
+		LOG_TRACE(std::string("User-provided WebView2 channel=") + WideToNarrow(webView2Channel));
 	}
-	std::wstring_view webViewFolder = L"";
-	if (vm.count("root"))
+	
+	std::wstring webViewFolder = L"";
+	if (parser.HasOption(L"root"))
 	{   // Assume second argument of WebView2 channel to use: "fixed", we read the folder
-		webViewFolder = vm["root"].as<std::wstring>();
-		LOG_TRACE << "User-provided WebView2 root folder=" << webViewFolder.data();
+		webViewFolder = parser.GetValueOr(L"root", L"");
+		LOG_TRACE(std::string("User-provided WebView2 root folder=") + WideToNarrow(webViewFolder));
 	}
+	
 	bool isTest = false;
-	std::wstring_view webViewport = L"";
-	if (vm.count("test"))
+	std::wstring webViewport = L"";
+	if (parser.HasOption(L"test"))
 	{
-		if (vm.count("port"))
+		if (parser.HasOption(L"port"))
 		{
 			isTest = true;
-			webViewport = vm["port"].as<std::wstring>();
-			LOG_TRACE << "test is on, port is=" << webViewport.data();
+			webViewport = parser.GetValueOr(L"port", L"");
+			LOG_TRACE(std::string("test is on, port is=") + WideToNarrow(webViewport));
 		}
 		else
 		{
-			LOG_ERROR << "Error: 'port' option is required when 'test' is specified.";
+			LOG_ERROR("Error: 'port' option is required when 'test' is specified.");
 			MessageBox(nullptr, L"Error: 'port' option is required when 'test' is specified.", L"Error", MB_ICONERROR);
 			return E_INVALIDARG;
 		}
@@ -72,16 +72,16 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 	HRESULT hr = ::GetAvailableCoreWebView2BrowserVersionString(nullptr, &edgeVersionInfo);
 	if (FAILED(hr) || (edgeVersionInfo == nullptr))
 	{
-		LOG_TRACE << "The WebView2 runtime is not installed";
-		LOG_TRACE << "Please install the WebView2 runtime before running this application available on https://go.microsoft.com/fwlink/p/?LinkId=2124703";
+		LOG_TRACE("The WebView2 runtime is not installed");
+		LOG_TRACE("Please install the WebView2 runtime before running this application available on https://go.microsoft.com/fwlink/p/?LinkId=2124703");
 		return (hr);
 	}
-	LOG_TRACE << "Found installed WebView version=" << edgeVersionInfo;
+	LOG_TRACE(std::string("Found installed WebView version=") + WideToNarrow(edgeVersionInfo));
 
 	if (webView2Version.empty())
 	{   // User did not provided specific WebView2 versions and channels.
 		// Set WebView2 version and channel to default values. 
-		std::wstring_view edgeVersionInfoStr = edgeVersionInfo;
+		std::wstring edgeVersionInfoStr = edgeVersionInfo;
 		size_t pos = edgeVersionInfoStr.find(L' ');
 
 		if ((edgeVersionInfoStr.size() > 0) && (pos < edgeVersionInfoStr.size() - 1))
@@ -95,8 +95,8 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 			webView2Version = edgeVersionInfoStr;
 		}
 
-		LOG_TRACE << "Using WebView2 version=" << webView2Version.data();
-		LOG_TRACE << "Using WebView2 channel=" << webView2Channel.data();
+		LOG_TRACE(std::string("Using WebView2 version=") + WideToNarrow(webView2Version));
+		LOG_TRACE(std::string("Using WebView2 channel=") + WideToNarrow(webView2Channel));
 	}
 	profile.browserDirectory = WebView2::Utility::GetBrowserDirectory(webView2Version, webView2Channel, webViewFolder);
 	profile.userDataDirectory = WebView2::Utility::GetUserDataDirectory(webView2Channel);

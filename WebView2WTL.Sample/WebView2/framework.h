@@ -57,30 +57,30 @@ extern CAppModule _Module;
 #include <cpprest/json.h>
 
 // command line parser
-#include <boost/program_options.hpp>
+//#include <boost/program_options.hpp>
 
 // logs
-#include <boost/log/trivial.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/common.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/logger.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/log/expressions/keyword.hpp>
-#include <boost/regex.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
-#include <boost/log/utility/ipc/reliable_message_queue.hpp>
-#include <boost/log/utility/ipc/object_name.hpp>
+//#include <boost/log/trivial.hpp>
+//#include <boost/log/core.hpp>
+//#include <boost/log/common.hpp>
+//#include <boost/log/expressions.hpp>
+//#include <boost/log/attributes.hpp>
+//#include <boost/log/sinks.hpp>
+//#include <boost/log/sinks/text_file_backend.hpp>
+//#include <boost/log/utility/setup/console.hpp>
+//#include <boost/log/utility/setup/file.hpp>
+//#include <boost/log/utility/setup/common_attributes.hpp>
+//#include <boost/log/sources/severity_logger.hpp>
+//#include <boost/log/sources/record_ostream.hpp>
+//#include <boost/log/sources/logger.hpp>
+//#include <boost/log/support/date_time.hpp>
+//#include <boost/log/expressions/keyword.hpp>
+//#include <boost/regex.hpp>
+//#include <boost/algorithm/string.hpp>
+//#include <boost/filesystem.hpp>
+//#include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
+//#include <boost/log/utility/ipc/reliable_message_queue.hpp>
+//#include <boost/log/utility/ipc/object_name.hpp>
 
 //Windows
 #include <ppl.h>
@@ -100,13 +100,6 @@ extern CAppModule _Module;
 //namespaces
 
 namespace	fs = std::filesystem;
-namespace	logging = boost::log;
-namespace	src = boost::log::sources;
-namespace	attrs = boost::log::attributes;
-namespace	sinks = boost::log::sinks;
-namespace	expr = boost::log::expressions;
-namespace	keywords = boost::log::keywords;
-namespace	po = boost::program_options;
 
 
 // custom messages
@@ -123,9 +116,9 @@ inline constexpr int ERR_RESOURCE_NOT_FOUND = -1025;
 
 enum ColorMode
 {
-	Dark,
-	Light,
-	none
+  Dark,
+  Light,
+  none
 };
 
 #if defined _M_IX86

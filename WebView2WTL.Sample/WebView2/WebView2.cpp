@@ -37,13 +37,13 @@ LRESULT CWebView2::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 }
 void CWebView2::CreationCompleted()
 {
-	LOG_TRACE << __FUNCTION__;
+	LOG_TRACE(__FUNCTION__);
 }
 void CWebView2::NavigationCompleted(std::wstring url)
 {
-	LOG_TRACE << __FUNCTION__  << " url=" << url.c_str();
+	LOG_TRACE(std::string(__FUNCTION__) + " url=" + WideToNarrow(url));
 }
 void CWebView2::AuthenticationCompleted()
 {
-	LOG_TRACE << __FUNCTION__;
+	LOG_TRACE(__FUNCTION__);
 }

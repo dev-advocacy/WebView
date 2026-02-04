@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "utility.h"
 #include "CheckFailure.h"
@@ -114,21 +114,21 @@ namespace WebView2
 
 			SetCreationCompletedCallback([](CWebView2Impl<T>* parent)
 				{
-					LOG_TRACE("CreationCompletedCallback");
+					LOG_TRACE << "CreationCompletedCallback";
 					T* wnd = static_cast<T*>(parent);
 					::MessageBoxW(wnd->m_hWnd, L"Creation completed", L"DEBUG", MB_OK | MB_ICONINFORMATION);
 				});
 
 			SetAuthenticationCompletedCallback([](CWebView2Impl<T>* parent)
 				{
-					LOG_TRACE("AuthenticationCompletedCallback");
+					LOG_TRACE << "AuthenticationCompletedCallback";
 					T* wnd = static_cast<T*>(parent);
 					::MessageBoxW(wnd->m_hWnd, L"Authentication completed", L"DEBUG", MB_OK | MB_ICONINFORMATION);
 				});
 
 			SetNavigationStartingCallback([](CWebView2Impl<T>* parent, std::wstring uri)
 				{
-					LOG_TRACE(std::string("NavigationStartingCallback URI=") + WideToNarrow(uri));
+					LOG_TRACE << "NavigationStartingCallback" << L" URI=" << uri;
 					T* wnd = static_cast<T*>(parent);
 					::MessageBoxW(wnd->m_hWnd, std::format(L"Navigation starting to URI {}", uri).c_str(),
 						L"DEBUG", MB_OK | MB_ICONINFORMATION);
@@ -136,7 +136,7 @@ namespace WebView2
 
 			SetNavigationCompletedCallback([](CWebView2Impl<T>* parent, std::wstring uri)
 				{
-					LOG_TRACE(std::string("NavigationCompletedCallback URI=") + WideToNarrow(uri));
+					LOG_TRACE << "NavigationCompletedCallback" << L" URI=" << uri;
 					T* wnd = static_cast<T*>(parent);
 					::MessageBoxW(wnd->m_hWnd, std::format(L"Navigation completed to URI {}", uri).c_str(),
 						L"DEBUG", MB_OK | MB_ICONINFORMATION);
@@ -153,7 +153,7 @@ namespace WebView2
 		}
 		virtual ~CWebView2Impl()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			CloseWebView();
 		}
 		LRESULT	OnCallBack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -208,7 +208,7 @@ namespace WebView2
 		HRESULT OnDlgInit(bool ismodeless=false)
 		{
 			
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			if (InitWebView() == false)
 			{
 				RETURN_IF_FAILED(HRESULT_FROM_WIN32(GetLastError()));
@@ -223,7 +223,7 @@ namespace WebView2
 		LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 		{
 			
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			if (InitWebView() == false)
 			{
 				RETURN_IF_FAILED(HRESULT_FROM_WIN32(GetLastError()));
@@ -246,19 +246,19 @@ namespace WebView2
 #pragma region event
 		virtual void CreationCompleted()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 		}
 		virtual void NavigationCompleted(std::wstring url)
 		{
-			LOG_TRACE(std::string(__FUNCTION__) + " URI=" + WideToNarrow(url));
+			LOG_TRACE << __FUNCTION__ << L" URI=" << url;
 		}
 		virtual void AuthenticationCompleted()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 		}
 		virtual void NavigationStarting()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 		}
 #pragma endregion events
 #pragma region webview2_implementation
@@ -292,7 +292,7 @@ namespace WebView2
 								auto vname = cookie[NAME_PROP].serialize();
 
 								std::wstring s = std::format(L"domain:{0} expire:{1} path:{2} name={3} value={4}", vdomain, dt.to_string(), vpath, vname, vvalue);
-								LOG_TRACE(WideToNarrow(s));
+								LOG_TRACE << s;
 							}
 						}
 					}
@@ -302,7 +302,7 @@ namespace WebView2
 		}
 		HRESULT get_cookies_by_devtools()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			RETURN_IF_NULL_ALLOC(webSettings_);
 			wil::com_ptr<ICoreWebView2DevToolsProtocolEventReceiver> receiver;
 			RETURN_IF_FAILED(webView_->GetDevToolsProtocolEventReceiver(L"Network.getAllCookies", &receiver));
@@ -320,7 +320,7 @@ namespace WebView2
 		}
 		HRESULT add_cookie(std::wstring domain, std::wstring name, std::wstring value)
 		{
-			LOG_TRACE(std::string(__FUNCTION__) + " domain=" + WideToNarrow(domain) + " name=" + WideToNarrow(name) + " value=" + WideToNarrow(value));
+			LOG_TRACE << __FUNCTION__ << L" domain=" << domain << L" name=" << name << L" value=" << value;
 			RETURN_IF_NULL_ALLOC(cookieManager_);
 			wil::com_ptr<ICoreWebView2Cookie> cookie;
 			HRESULT hr = cookieManager_->CreateCookie(name.c_str(), value.c_str(), domain.c_str(), L"/", &cookie);
@@ -371,7 +371,7 @@ namespace WebView2
 							}
 							result += L"]";
 						}
-						LOG_TRACE(WideToNarrow(result));
+						LOG_TRACE << result;
 					}
 			return error_code;
 				}
@@ -381,7 +381,7 @@ namespace WebView2
 		}
 		HRESULT delete_all_cookies()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			RETURN_IF_NULL_ALLOC(cookieManager_);
 			HRESULT hr = cookieManager_->DeleteAllCookies();
 			RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
@@ -389,7 +389,7 @@ namespace WebView2
 		}
 		HRESULT navigate_to(std::wstring_view url)
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 
 			if (url.empty())
 				RETURN_IF_FAILED_MSG(E_INVALIDARG, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(E_INVALIDARG).data(), E_INVALIDARG);
@@ -456,7 +456,7 @@ namespace WebView2
 
 		HRESULT Navigate(std::wstring_view url, CallbackFunc onComplete)
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			RETURN_IF_NULL_ALLOC(webView_);
 
 			m_callbacks[CallbackType::NavigationCompleted] = onComplete;
@@ -472,7 +472,7 @@ namespace WebView2
 		/// <returns></returns>
 		HRESULT OnCreateEnvironmentCompleted(HRESULT hr, ICoreWebView2Environment* environment)
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			if (hr == S_OK)
 			{
 				T* pT = static_cast<T*>(this);
@@ -482,7 +482,7 @@ namespace WebView2
 				wchar_t t[255];
 				pT->GetWindowText( (LPTSTR) t, 255);
 
-				LOG_TRACE(std::string("Hwnd=") + std::to_string(reinterpret_cast<uintptr_t>(pT->m_hWnd)) + " caption=" + WideToNarrow(std::wstring(t)));
+				LOG_TRACE << "Hwnd=" << pT->m_hWnd << " caption=" << std::wstring(t);
 
 				RETURN_IF_FAILED(environment->QueryInterface(IID_PPV_ARGS(&webViewEnvironment_)));
 				RETURN_IF_FAILED(webViewEnvironment_->CreateCoreWebView2Controller(pT->m_hWnd, Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(this, &CWebView2Impl::OnCreateWebViewControllerCompleted).Get()));
@@ -498,7 +498,7 @@ namespace WebView2
 		/// </summary>
 		HRESULT InitWebView()
 		{
-			LOG_TRACE(std::string(__FUNCTION__) + " Using user data directory:" + WideToNarrow(userDataDirectory_));
+			LOG_TRACE << __FUNCTION__ << " Using user data directory:" << userDataDirectory_.data();
 
 			T* pT = static_cast<T*>(this);
 			RETURN_IF_WIN32_BOOL_FALSE(::IsWindow(pT->m_hWnd));
@@ -525,7 +525,7 @@ namespace WebView2
 		}
 		void CloseWebView()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			if (this->webView_ && this->webController_ && this->webViewEnvironment_ && this->webSettings_)
 			{
 				webView_->remove_NavigationCompleted(m_navigationCompletedToken);
@@ -539,7 +539,7 @@ namespace WebView2
 			}
 			else
 			{
-				LOG_TRACE(std::string(__FUNCTION__) + " Unable to release webview2");
+				LOG_TRACE << __FUNCTION__ << " Unable to release webview2";
 			}
 		}
 		/// <summary>
@@ -567,12 +567,12 @@ namespace WebView2
 						webController_->put_IsVisible(TRUE);
 						CRect rc;
 						webController_->get_Bounds(&rc);
-						LOG_TRACE(std::string(__FUNCTION__) + " width=" + std::to_string(rc.Width()) + " height=" + std::to_string(rc.Height()) + " visibility=" + std::to_string(isVisible));
+						LOG_TRACE << __FUNCTION__ << " width=" << rc.Width() << " height=" << rc.Height() << " visibility=" << isVisible;
 					}
 				}
 				else
 				{
-					LOG_TRACE(std::string(__FUNCTION__) + " hr=" + std::to_string(hr));
+					LOG_TRACE << __FUNCTION__ << " hr=" << hr;
 				}
 			}
 			return S_OK;
@@ -585,7 +585,7 @@ namespace WebView2
 		/// <returns></returns>
 		HRESULT OnCreateWebViewControllerCompleted(HRESULT result, ICoreWebView2Controller* controller)
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			HRESULT hr = S_OK;
 
 			RETURN_IF_NULL_ALLOC(controller);
@@ -645,7 +645,7 @@ namespace WebView2
 				hr = args->get_WebErrorStatus(&webErrorStatus);
 				if (webErrorStatus == COREWEBVIEW2_WEB_ERROR_STATUS_DISCONNECTED)
 				{
-					LOG_TRACE(std::string("function=") + __func__ + "COREWEBVIEW2_WEB_ERROR_STATUS_DISCONNECTED");
+					LOG_TRACE << "function=" << __func__  << "COREWEBVIEW2_WEB_ERROR_STATUS_DISCONNECTED";
 					return webErrorStatus;
 				}
 			}
@@ -815,7 +815,7 @@ namespace WebView2
 				auto authV = new TCHAR[1000];
 				hr = headers->GetHeader(L"Authorization", &authV);
 				RETURN_IF_FAILED_MSG(hr, "function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(hr).data(), hr);
-				LOG_TRACE(std::string(__FUNCTION__) + " name=Authorization value=" + WideToNarrow(authV));
+				LOG_TRACE << __FUNCTION__ << " name=Authorization" << " value=" << authV;
 				auto& callback = m_callbacks[CallbackType::AuthenticationCompleted];
 				RETURN_IF_NULL_ALLOC_MSG(callback, "function=%s message=unable to create callback", __func__);
 				RunAsync(callback);
@@ -878,7 +878,7 @@ namespace WebView2
 
 		HRESULT RegisterEventHandlers()
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 
 
 			HRESULT hr = m_webviewEventSource3->add_BasicAuthenticationRequested(Microsoft::WRL::Callback<ICoreWebView2BasicAuthenticationRequestedEventHandler>([this](

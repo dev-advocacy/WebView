@@ -60,9 +60,6 @@
     <ClCompile Include="WebView2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WebViewProfile.cpp">
-      <Filter>Source Files\WebView2</Filter>
-    </ClCompile>
     <ClCompile Include="Utility.cpp">
       <Filter>Source Files\WebView2\utility</Filter>
     </ClCompile>
@@ -87,9 +84,6 @@
     <ClCompile Include="LogView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="logger.cpp">
-      <Filter>Source Files\Logger</Filter>
-    </ClCompile>
     <ClCompile Include="SingleWebView2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -104,6 +98,12 @@
     </ClCompile>
     <ClCompile Include="DomainDlg.cpp">
       <Filter>Source Files\Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="logger_impl.cpp">
+      <Filter>Source Files\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="WebViewProfile.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +200,9 @@
     <ClInclude Include="DomainDlg.h">
       <Filter>Header Files\Dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="CommandLineParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WebView2.rc">
@@ -222,6 +225,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="vcpkg.json" />
+    <None Include="ConvertLogCalls.ps1" />
+    <None Include="BOOST_REMOVAL_SUMMARY.md" />
+    <None Include="ConvertAllLogCalls.ps1" />
+    <None Include="FINAL_LOG_CONVERSION_INSTRUCTIONS.md" />
+    <None Include="FIX_ALL_LOGS.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="manifest.xml" />

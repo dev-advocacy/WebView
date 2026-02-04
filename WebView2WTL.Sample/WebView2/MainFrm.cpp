@@ -64,7 +64,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	if (FAILED(hr = CWebViewProfile::Profile(m_webviewprofile)))
 	{
-		LOG_TRACE << "Failed to create the profile | " << "message" << ": 0x" << std::hex << std::setw(8) << hr;
+		LOG_TRACE(std::string("Failed to create the profile | message: 0x") + std::to_string(hr));
 		return -1;
 	}
 	
@@ -188,7 +188,7 @@ LRESULT CMainFrame::OnScenarioWebRequest(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 		auto hr = m_webview2->WebRequest(webrequestdlg.get_uri(), webrequestdlg.get_verb(), webrequestdlg.get_data(), L"Content-Type: application/json");
 		if (FAILED(hr))
 		{
-			LOG_TRACE << "The WebView2 WebRequest failed | " << "message" << ": 0x" << std::hex << std::setw(8) << hr;			
+			LOG_TRACE(std::string("The WebView2 WebRequest failed | message: 0x") + std::to_string(hr));			
 		}
 	}
 	return S_OK;

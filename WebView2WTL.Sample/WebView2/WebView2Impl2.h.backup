@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "pch.h"
 #include "resource.h"
 #include "headersprop.h"
@@ -463,7 +463,7 @@ namespace WebView2
 									L"domain:{0} expire:{1} expiresReadable:{2} path:{3} name={4} value={5} httpOnly={6} secure={7}",
 									cookie.domain, cookie.expires, cookie.expiresReadable, cookie.path, cookie.name, cookie.value,
 									cookie.httpOnly ? L"true" : L"false", cookie.secure ? L"true" : L"false");
-								LOG_TRACE(WideToNarrow(s));
+								LOG_TRACE << s;
 							}
 						}
 					}					
@@ -515,9 +515,9 @@ namespace WebView2
 		virtual void NavigationCompleteEvent(bool isSuccess, unsigned long long navigationId,
 											 COREWEBVIEW2_WEB_ERROR_STATUS errorStatus) override
 		{
-		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  success=") + std::to_string(isSuccess) + ", ID=" + std::to_string(navigationId) +
-				  ", error status=" + std::to_string(errorStatus));
+			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE << L"  success=" << isSuccess << L", ID=" << navigationId
+					  << L", error status=" << errorStatus;
 			
 			if (m_is_test == true && m_start == true)
 			{
@@ -531,23 +531,23 @@ namespace WebView2
 		}
 		virtual void ResponseReceivedEvent(std::wstring_view method, std::wstring_view uri) override
 		{
-		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)));
+			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE << L"  method=" << method << L", uri=" << uri;
 		}
 		virtual void RequestEvent(std::wstring_view method, std::wstring_view uri,
 								  COREWEBVIEW2_WEB_RESOURCE_CONTEXT resourceContext) override
 		{
-		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)) +
-				  ", resource context=" + std::to_string(resourceContext));
+			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE << L"  method=" << method << L", uri=" << uri
+					  << L", resource context=" << resourceContext;
 		}
 		virtual void ClientCertificateRequestedEvent(std::vector<ClientCertificate> client_certificates, wil::com_ptr<ICoreWebView2Deferral> deferral) override
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 		}
 		virtual void OnCookiesReceived(const std::vector<Cookie>& cookies) override
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 		}
 	private:
 
@@ -575,7 +575,7 @@ namespace WebView2
 
 		HRESULT OnCreateCoreWebView2ControllerCompleted(HRESULT result, ICoreWebView2CompositionController* compositionController)
 		{
-			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE << __FUNCTION__;
 			if (result != S_OK)
 				return result;
 			m_compositionController = compositionController;
@@ -614,7 +614,7 @@ namespace WebView2
 		/// <returns>The result of the initialization.</returns>
 		HRESULT InitializeWebView(bool log=false)
 		{
-			LOG_TRACE(std::string(__FUNCTION__) + " Using browser directory:" + WideToNarrow(m_browser_directory));
+			LOG_TRACE << __FUNCTION__ << " Using browser directory:" << m_browser_directory.data();
 			auto options = Microsoft::WRL::Make<CoreWebView2EnvironmentOptions>();
 			HRESULT hr = S_OK;
 			std::wstring argbrowser;
@@ -622,7 +622,7 @@ namespace WebView2
 			if (m_is_test == true)
 			{
 				m_port = m_port.empty() ? L"9222" : m_port;
-				LOG_DEBUG(std::string("Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=") + WideToNarrow(m_port));
+				LOG_DEBUG << "Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=" << m_port;
 				argbrowser = L"--remote-debugging-port=" + m_port;
 			}
 			if (log == true)
@@ -630,13 +630,13 @@ namespace WebView2
 				fs::path unique_file;
 				if (!Utility::GetUniqueLogFileName(unique_file))
 				{
-					LOG_DEBUG(std::string("Create unique log file for log-net-log filename: ") + unique_file.string());
+					LOG_DEBUG << "Create unique log file for log-net-log filename: " << unique_file;
 					auto log = L"--log-net-log=" + unique_file.native();
 					argbrowser += L" " + log;					
 				}
 				else
 				{
-					LOG_ERROR("Failed to create unique log file name for log-net-log");
+					LOG_ERROR << "Failed to create unique log file name for log-net-log";
 				}
 			}
 			if (!argbrowser.empty())

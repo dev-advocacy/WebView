@@ -249,12 +249,12 @@ namespace WebView2
 			BOOL is_success = FALSE;
 			UINT64 inavigationid = 0;
 
-			args->get_IsSuccess(&is_success);
-			args->get_NavigationId(&inavigationid);
+		args->get_IsSuccess(&is_success);
+		args->get_NavigationId(&inavigationid);
 
-			LOG_TRACE << __FUNCTION__ << " IsSuccess:" << is_success << " NavigationId:" << inavigationid;
-		}		
-		void raise_webresource_navigation_complete_event(wil::com_ptr <ICoreWebView2NavigationCompletedEventArgs> args)
+		LOG_TRACE(std::string(__FUNCTION__) + " IsSuccess:" + std::to_string(is_success) + " NavigationId:" + std::to_string(inavigationid));
+	}		
+	void raise_webresource_navigation_complete_event(wil::com_ptr <ICoreWebView2NavigationCompletedEventArgs> args)
 		{
 			if (m_callback == nullptr)
 				return;
@@ -295,22 +295,22 @@ namespace WebView2
 				args->get_IsUserInitiated(&is_userInitiated);
 				args->get_NavigationId(&inavigationid);
 
-				wil::unique_cotaskmem_string navigationTargetUri;
-				if (SUCCEEDED(args->get_Uri(&navigationTargetUri)))
-				{
-					LOG_TRACE << __FUNCTION__ << " uri:" << navigationTargetUri.get() << " redirected:" << is_redirected
-						<< " is user initiated:" << is_userInitiated << "NavigationId" << inavigationid;
-				}
-				else
-				{
-					LOG_TRACE << __FUNCTION__ << " get_Uri failed";
-				}
+			wil::unique_cotaskmem_string navigationTargetUri;
+			if (SUCCEEDED(args->get_Uri(&navigationTargetUri)))
+			{
+				LOG_TRACE(std::string(__FUNCTION__) + " uri:" + WideToNarrow(navigationTargetUri.get()) + " redirected:" + std::to_string(is_redirected)
+					+ " is user initiated:" + std::to_string(is_userInitiated) + " NavigationId:" + std::to_string(inavigationid));
 			}
 			else
 			{
-				LOG_TRACE << __FUNCTION__ << " args is nullptr";
+				LOG_TRACE(std::string(__FUNCTION__) + " get_Uri failed");
 			}
 		}
+		else
+		{
+			LOG_TRACE(std::string(__FUNCTION__) + " args is nullptr");
+		}
+	}
 		void raise_webresource_navigation_starting_event(wil::com_ptr <ICoreWebView2NavigationStartingEventArgs> args)
 		{
 			if (m_callback == nullptr)
@@ -405,10 +405,10 @@ namespace WebView2
 		}
 
 
-		HRESULT enable_client_certificate_request_event() noexcept
-		{
-			LOG_TRACE << __FUNCTION__;
-			HRESULT hr = S_OK;
+	HRESULT enable_client_certificate_request_event() noexcept
+	{
+		LOG_TRACE(__FUNCTION__);
+		HRESULT hr = S_OK;
 
 			m_webviewEventSource5->add_ClientCertificateRequested(
 				Microsoft::WRL::Callback<ICoreWebView2ClientCertificateRequestedEventHandler>([this](ICoreWebView2* webview, ICoreWebView2ClientCertificateRequestedEventArgs* args)
@@ -487,10 +487,10 @@ namespace WebView2
 			return (hr);
 		}
 
-		HRESULT enable_webresource_response_received_event()
-		{
-			LOG_TRACE << __FUNCTION__;
-			m_webviewEventSource2->add_WebResourceResponseReceived(
+	HRESULT enable_webresource_response_received_event()
+	{
+		LOG_TRACE(__FUNCTION__);
+		m_webviewEventSource2->add_WebResourceResponseReceived(
 					Microsoft::WRL::Callback<ICoreWebView2WebResourceResponseReceivedEventHandler>(
 					[this](ICoreWebView2* webview, ICoreWebView2WebResourceResponseReceivedEventArgs* args)
 					-> HRESULT {
@@ -511,10 +511,10 @@ namespace WebView2
 				.Get(), &m_webResourceResponseReceivedToken);
 			return S_OK;
 		}
-		HRESULT enable_webresource_navigation_complete_event()
-		{
-			LOG_TRACE << __FUNCTION__;
-			RETURN_IF_FAILED(m_webviewEventSource->add_NavigationCompleted(Microsoft::WRL::Callback<ICoreWebView2NavigationCompletedEventHandler>([this](
+	HRESULT enable_webresource_navigation_complete_event()
+	{
+		LOG_TRACE(__FUNCTION__);
+		RETURN_IF_FAILED(m_webviewEventSource->add_NavigationCompleted(Microsoft::WRL::Callback<ICoreWebView2NavigationCompletedEventHandler>([this](
 				ICoreWebView2* core_web_view2,
 				ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT
 				{
@@ -525,10 +525,10 @@ namespace WebView2
 
 			return S_OK;
 		}
-		HRESULT enable_webresource_navigation_starting_event()
-		{
-			LOG_TRACE << __FUNCTION__;
-			RETURN_IF_FAILED(m_webviewEventSource->add_NavigationStarting(Microsoft::WRL::Callback<ICoreWebView2NavigationStartingEventHandler>([this](
+	HRESULT enable_webresource_navigation_starting_event()
+	{
+		LOG_TRACE(__FUNCTION__);
+		RETURN_IF_FAILED(m_webviewEventSource->add_NavigationStarting(Microsoft::WRL::Callback<ICoreWebView2NavigationStartingEventHandler>([this](
 				ICoreWebView2* core_web_view2,
 				ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT
 				{			
@@ -538,10 +538,10 @@ namespace WebView2
 				}).Get(), &m_navigationStartingToken));
 			return S_OK;
 		}
-		HRESULT enable_webresource_request_event()
-		{
-			LOG_TRACE << __FUNCTION__;
-			RETURN_IF_FAILED(m_webviewEventSource->AddWebResourceRequestedFilter(L"*", COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL));
+	HRESULT enable_webresource_request_event()
+	{
+		LOG_TRACE(__FUNCTION__);
+		RETURN_IF_FAILED(m_webviewEventSource->AddWebResourceRequestedFilter(L"*", COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL));
 			RETURN_IF_FAILED(m_webviewEventSource->add_WebResourceRequested(Microsoft::WRL::Callback<ICoreWebView2WebResourceRequestedEventHandler>([this](
 				ICoreWebView2* core_web_view2,
 				ICoreWebView2WebResourceRequestedEventArgs* args) -> HRESULT

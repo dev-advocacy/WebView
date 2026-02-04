@@ -27,6 +27,14 @@
 
 #endif //PCH_H
 
+// CRITICAL: Undefine ATL/WTL macros AFTER the include guard
+// This ensures they are undefined for every compilation unit that includes this header
+#ifdef L
+#undef L
+#endif
+#ifdef R
+#undef R
+#endif
 
 
 #if defined _M_IX86

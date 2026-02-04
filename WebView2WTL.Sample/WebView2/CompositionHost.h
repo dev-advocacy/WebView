@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "logger.h"
+#include <sstream>
 
 
 namespace WebView2
@@ -40,7 +41,7 @@ namespace WebView2
 				POINTSTOPOINT(point, lParam);
 				if (message == WM_MOUSEWHEEL || message == WM_MOUSEHWHEEL)
 				{
-					LOG_TRACE << __FUNCTION__ << " WM_MOUSEWHEEL " << "WM_MOUSEHWHEEL";
+					LOG_TRACE(std::string(__FUNCTION__) + " WM_MOUSEWHEEL WM_MOUSEHWHEEL");
 
 					// Mouse wheel messages are delivered in screen coordinates.
 					// SendMouseInput expects client coordinates for the WebView, so convert
@@ -164,7 +165,7 @@ namespace WebView2
 		 */
 		HRESULT initialize(const HWND hwnd, wil::com_ptr<ICoreWebView2Controller> controller, wil::com_ptr<ICoreWebView2CompositionController> compositionController)
 		{
-			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 			if (controller && compositionController && IsWindow(hwnd))
 			{
 				m_controller = controller;
@@ -185,12 +186,14 @@ namespace WebView2
 		}
 		CRect get_bounds() const
 		{
-			LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 			CRect bounds = { 0 };
 			HRESULT result = m_controller->get_Bounds(&bounds);
 			if (SUCCEEDED(result))
 			{
-				LOG_TRACE << "left=" << bounds.left << " top=" << bounds.top << " width=" << bounds.Width() << " height=" << bounds.Height();
+				std::ostringstream oss;
+				oss << "left=" << bounds.left << " top=" << bounds.top << " width=" << bounds.Width() << " height=" << bounds.Height();
+				LOG_TRACE(oss.str());
 			}
 			return bounds;
 		}
@@ -260,7 +263,7 @@ namespace WebView2
 		*/
 		HRESULT InitializeCursorCapture(HWND hwnd)
 		{
-			LOG_DEBUG << __FUNCTION__;
+			LOG_DEBUG(__FUNCTION__);
 			RETURN_IF_FAILED(
 				m_compositionController->add_CursorChanged(Microsoft::WRL::Callback<
 					ICoreWebView2CursorChangedEventHandler>([this, hwnd](ICoreWebView2CompositionController* sender,
