@@ -107,9 +107,9 @@ namespace WebView2
 					it->GetCurrentHeader(&name, &value);
 					// dump values
 
-					os::Wininet wininet;
+					//os::Wininet wininet;
 
-					wininet.SyncCookie(uri.get(), name.get(), value.get());
+					//wininet.SyncCookie(uri.get(), name.get(), value.get());
 
 					//LOG_TRACE << __FUNCTION__ << " uri:" << uri.get() << " Set-Cookie Header: " << name.get() << " Value: " << value.get();
 				}

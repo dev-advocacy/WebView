@@ -300,23 +300,23 @@ LRESULT CMainFrame::OnScenarioDetect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	auto ret = detectdlg.DoModal();
 	return S_OK;
 }
-LRESULT CMainFrame::OnScenarioWebViewGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-	m_webview2->getcookies();
-	return S_OK;
-}
-LRESULT CMainFrame::OnScenarioWebViewGetCookiesContainer(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-	CDomainDlg dlg;
-	INT_PTR result = dlg.DoModal();
-
-	if (result == IDOK) 
-	{
-		auto domain = dlg.GetDomain();
-		m_webview2->getcookies(domain);
-	}
-	return S_OK;
-}
+//LRESULT CMainFrame::OnScenarioWebViewGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+//{
+//	m_webview2->getcookies();
+//	return S_OK;
+//}
+//LRESULT CMainFrame::OnScenarioWebViewGetCookiesContainer(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+//{
+//	CDomainDlg dlg;
+//	INT_PTR result = dlg.DoModal();
+//
+//	if (result == IDOK) 
+//	{
+//		auto domain = dlg.GetDomain();
+//		m_webview2->getcookies(domain);
+//	}
+//	return S_OK;
+//}
 LRESULT CMainFrame::OnScenarioWininetGetCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	CDomainDlg dlg;

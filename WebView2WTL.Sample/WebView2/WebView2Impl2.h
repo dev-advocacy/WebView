@@ -167,21 +167,21 @@ namespace WebView2
 
 		HRESULT getwininetcookies(std::wstring uri)
 		{
-			os::Wininet wininet;
+			//os::Wininet wininet;
 
-			wininet.GetCookies(uri);
+			//wininet.GetCookies(uri);
 
 			return S_OK;
 		}
 
 		HRESULT getcookies(std::wstring uri)
 		{
-			get_cookies(uri);
+			//get_cookies(uri);
 			return S_OK;
 		}
 		HRESULT getcookies()
 		{
-			get_cookies_by_devtools();
+			//get_cookies_by_devtools();
 			return S_OK;
 		}
 	HRESULT showdevtools()
@@ -197,38 +197,39 @@ namespace WebView2
 	HRESULT clearcookies()
 	{
 		LOG_TRACE(__FUNCTION__);
-		RETURN_IF_NULL_ALLOC(m_cookieManager);
-			HRESULT hr = m_cookieManager->DeleteAllCookies();
-			return (hr);
+		//RETURN_IF_NULL_ALLOC(m_cookieManager);
+		//	HRESULT hr = m_cookieManager->DeleteAllCookies();
+		//	return (hr);
+    return S_OK;
 		}
 
 	HRESULT add_cookie(std::wstring domain, std::wstring name, std::wstring value)
 	{
 		LOG_TRACE(std::string(__FUNCTION__) + " domain=" + WideToNarrow(domain) + " name=" + WideToNarrow(name) + " value=" + WideToNarrow(value));
-		RETURN_IF_NULL_ALLOC(m_cookieManager);
-			wil::com_ptr<ICoreWebView2Cookie> cookie;
-			HRESULT hr = m_cookieManager->CreateCookie(name.c_str(), value.c_str(), domain.c_str(), L"/", &cookie);
-			RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+		//  RETURN_IF_NULL_ALLOC(m_cookieManager);
+		//	wil::com_ptr<ICoreWebView2Cookie> cookie;
+		//	HRESULT hr = m_cookieManager->CreateCookie(name.c_str(), value.c_str(), domain.c_str(), L"/", &cookie);
+		//	RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
 
-			//cookie->put_IsHttpOnly(TRUE);
-			cookie->put_IsSecure(TRUE);
+			// cookie->put_IsHttpOnly(TRUE);
+			// cookie->put_IsSecure(TRUE);
 
-			hr = m_cookieManager->AddOrUpdateCookie(cookie.get());
-			RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+			// hr = m_cookieManager->AddOrUpdateCookie(cookie.get());
+			// RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
 			return S_OK;
 		}
 	HRESULT delete_all_cookies()
 	{
 		LOG_TRACE(__FUNCTION__);
-		RETURN_IF_NULL_ALLOC(m_cookieManager);
-			HRESULT hr = m_cookieManager->DeleteAllCookies();
-			RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+		//RETURN_IF_NULL_ALLOC(m_cookieManager);
+		//	HRESULT hr = m_cookieManager->DeleteAllCookies();
+		//	RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
 			return true;
 		}
 
 		HRESULT get_cookies(std::wstring uri)
 		{
-			RETURN_IF_NULL_ALLOC(m_cookieManager);
+			/*RETURN_IF_NULL_ALLOC(m_cookieManager);
 			HRESULT hr = m_cookieManager->GetCookies(uri.c_str(), Microsoft::WRL::Callback<ICoreWebView2GetCookiesCompletedHandler>([this, uri](HRESULT error_code, ICoreWebView2CookieList* list) -> HRESULT
 				{
 					if (SUCCEEDED(error_code))
@@ -269,7 +270,7 @@ namespace WebView2
 				return error_code;
 				}
 			).Get());
-			RETURN_IF_FAILED(hr);
+			RETURN_IF_FAILED(hr);*/
 			return S_OK;
 		}
 		HRESULT getpostData(std::wstring postData, std::unique_ptr<char[]>& postDataBytes,int& sizeNeededForMultiByte)
