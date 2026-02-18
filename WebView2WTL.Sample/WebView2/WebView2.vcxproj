@@ -305,10 +305,6 @@
     <Image Include="res\WebView2.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ConvertAllLogCalls.ps1" />
-    <None Include="ConvertLogCalls.ps1" />
-    <None Include="FINAL_LOG_CONVERSION_INSTRUCTIONS.md" />
-    <None Include="FIX_ALL_LOGS.ps1" />
     <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>

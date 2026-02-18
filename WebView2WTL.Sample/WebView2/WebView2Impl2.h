@@ -620,6 +620,11 @@ namespace WebView2
 			HRESULT hr = S_OK;
 			std::wstring argbrowser;
 
+
+			// enable single sign on with Azure Entra ID
+			hr = options->put_AllowSingleSignOnUsingOSPrimaryAccount(TRUE);
+
+
 			if (m_is_test == true)
 			{
 				m_port = m_port.empty() ? L"9222" : m_port;
@@ -711,5 +716,7 @@ namespace WebView2
 			}
 			return hr;
 		}
-	};
+	
+
+};
 }
