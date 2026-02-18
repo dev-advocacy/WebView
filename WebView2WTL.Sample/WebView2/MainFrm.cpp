@@ -76,7 +76,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	}
 
 	_webview_version = version;
-	m_webview2 = std::make_unique<CWebView2>(m_webviewprofile.browserDirectory, m_webviewprofile.userDataDirectory, L"https://outlook.office.com/mail/");
+	m_webview2 = std::make_unique<CWebView2>(m_webviewprofile.browserDirectory, m_webviewprofile.userDataDirectory, L"https://msdn.microsoft.com");
 	m_webview2->set_test(m_webviewprofile.isTest, m_webviewprofile.port);
 	m_hWndClient = m_webview2->Create(m_hWnd, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
 	m_webview2->set_parent(this->m_hWnd);
