@@ -23,9 +23,14 @@ public:
 	BOOL PreTranslateMessage(MSG* pMsg);
 
 	BEGIN_MSG_MAP(CWebView2)
+		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_PAINT, OnPaint)
 		CHAIN_MSG_MAP(CWebView2Impl2<CWebView2>)
 	END_MSG_MAP()
+
+	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+	
 
 	// Handler prototypes (uncomment arguments if needed):
 	//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)

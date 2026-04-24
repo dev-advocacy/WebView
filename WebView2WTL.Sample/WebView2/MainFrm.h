@@ -8,8 +8,9 @@
 #include "WebView2.h"
 #include "WebViewProfile.h"
 #include "WebViewDlg.h"
-#include "WebView2Impl.h"
+#include "WebView2Impl2.h"
 #include "UrlCombo.h"
+#include "RegisterMessages.h"
 
 class CMainFrame : public CFrameWindowImpl<CMainFrame>, public CUpdateUI<CMainFrame>,public CMessageFilter, public CIdleHandler
 {
@@ -50,14 +51,16 @@ public:
 		COMMAND_ID_HANDLER(ID_SCENARIO_WEBRESOURCEREQUEST, OnScenarioWebRequest)
 		COMMAND_ID_HANDLER(ID_SCENARIO_INSTALLATION, OnScenarioInstallation)
 		COMMAND_ID_HANDLER(ID_SCENARIO_DETECT, OnScenarioDetect)
-
-		//COMMAND_ID_HANDLER(ID_WEBVIEW_GETCOOKIES, OnScenarioWebViewGetCookies)
-		//COMMAND_ID_HANDLER(ID_WININET_GETCOOKIES, OnScenarioWininetGetCookies)
-		//COMMAND_ID_HANDLER(ID_WEBVIEW_GETCOOKIES_CONTAINER, OnScenarioWebViewGetCookiesContainer)
-		//COMMAND_ID_HANDLER(ID_WEBVIEW_DELETEALLCOOKIES, OnScenarioWebViewDeleteAllCookies)
 		COMMAND_ID_HANDLER(ID_WEBVIEW_SHOWDEVTOOLS, OnScenarioWebViewShowDevTools)
 
-		MESSAGE_HANDLER(MSG_NAVIGATE_CALLBACK, OnNavigate)
+		if (uMsg == CRegisteredMessages::NavigateCallback())
+		{
+			bHandled = TRUE;
+			lResult = OnNavigate(uMsg, wParam, lParam, bHandled);
+			if (bHandled)
+				return TRUE;
+		}
+
 		REFLECT_NOTIFICATIONS()
 		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)

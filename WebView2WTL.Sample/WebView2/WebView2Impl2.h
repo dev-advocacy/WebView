@@ -7,8 +7,8 @@
 #include "CompositionHost.h"
 #include "WebViewEvents.h"
 #include "WebViewAuthentication.h"
-#include "Wininet.h"
 #include "SingleWebView2.h"
+#include "RegisterMessages.h"
 
 namespace WebView2
 {
@@ -51,7 +51,16 @@ namespace WebView2
 			CHAIN_MSG_MAP(CCompositionHost<T>)
 			MESSAGE_HANDLER(WM_CREATE, OnCreate)
 			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-			MESSAGE_HANDLER(WM_RUN_FUNCTOR, OnRunFunctor)
+			/*MESSAGE_HANDLER(WM_RUN_FUNCTOR, OnRunFunctor)*/
+
+			if (uMsg == CRegisteredMessages::RunFunctor())
+			{
+				bHandled = TRUE;
+				lResult = OnRunFunctor(uMsg, wParam, lParam, bHandled);
+				if (bHandled)
+					return TRUE;
+			}
+
 		END_MSG_MAP()
 
 	CWebView2Impl2()

@@ -5,6 +5,8 @@
 
 namespace fs = std::filesystem;
 
+
+
 namespace WebView2
 {
     // Use for case-insensitive wstring keys in std::map.
@@ -30,7 +32,6 @@ namespace WebView2
 
         return buffer;
     }
-
     /// <summary>
     /// Return an new unique log file name
     /// </summary>

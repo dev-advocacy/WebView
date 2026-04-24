@@ -7,6 +7,7 @@
 #include "aboutdlg.h"
 #include "MainFrm.h"
 #include "logger.h"
+#include "RegisterMessages.h"
 
 CAppModule _Module;
 
@@ -25,6 +26,12 @@ public:
 	{
 
 		HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+		if (!CRegisteredMessages::Initialize())
+		{
+			::MessageBoxW(nullptr, L"Failed to register custom window messages.", L"Error", MB_OK | MB_ICONERROR);
+			return -1;
+		}
 
 		CMessageLoop theLoop;
 		_Module.AddMessageLoop(&theLoop);

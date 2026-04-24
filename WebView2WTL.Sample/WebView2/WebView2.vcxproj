@@ -241,6 +241,7 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
     <ClCompile Include="LogView.cpp" />
+    <ClCompile Include="RegisterMessages.cpp" />
     <ClCompile Include="SingleWebView2.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="UrlCombo.cpp" />
@@ -256,7 +257,6 @@
     </ClCompile>
     <ClCompile Include="WebRequestDlg.cpp" />
     <ClCompile Include="WebView2.cpp" />
-    <ClCompile Include="WebView2Impl.cpp" />
     <ClCompile Include="WebView2Main.cpp" />
     <ClCompile Include="WebViewDlg.cpp" />
     <ClCompile Include="WebViewProfile.cpp" />
@@ -275,6 +275,7 @@
     <ClInclude Include="headersprop.h" />
     <ClInclude Include="ImageListBox.h" />
     <ClInclude Include="LogView.h" />
+    <ClInclude Include="RegisterMessages.h" />
     <ClInclude Include="SingleWebView2.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="UrlCombo.h" />

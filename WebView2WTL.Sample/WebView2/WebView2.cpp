@@ -24,6 +24,11 @@ CWebView2::~CWebView2()
 {
 
 }
+LRESULT CWebView2::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	return WebView2::CWebView2Impl2<CWebView2>::OnCreate(uMsg, wParam, lParam, bHandled);
+}
+
 BOOL CWebView2::PreTranslateMessage(MSG* pMsg)
 {
 	//if (CWebView2Impl2<CWebView2>::PreTranslateMessage(pMsg))

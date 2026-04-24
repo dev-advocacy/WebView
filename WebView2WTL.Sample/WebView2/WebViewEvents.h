@@ -3,6 +3,7 @@
 #include "ClientCertificate.h"
 #include "CertificateDlg.h"
 #include "logger.h"
+#include "RegisterMessages.h"
 
 #include <locale>
 #include <codecvt>
@@ -27,7 +28,7 @@ namespace WebView2
 				_stopped = false;
 			}
 
-			::PostMessageW(wnd, WM_RUN_FUNCTOR, reinterpret_cast<WPARAM>(this), 0);
+			::PostMessageW(wnd, CRegisteredMessages::RunFunctor(), reinterpret_cast<WPARAM>(this), 0);
 
 			// Wait for the messaged to be processed on the UI thread.
 			std::unique_lock lock(_mutex);
