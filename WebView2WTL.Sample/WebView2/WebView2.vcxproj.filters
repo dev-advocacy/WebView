@@ -185,9 +185,6 @@
     <ClInclude Include="EdgeInfomation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Wininet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WebView2Impl2.h">
       <Filter>Header Files\WebView2\WebView2Impl</Filter>
     </ClInclude>

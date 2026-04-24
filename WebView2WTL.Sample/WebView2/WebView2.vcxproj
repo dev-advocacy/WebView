@@ -293,7 +293,6 @@
     <ClInclude Include="WebViewDlg.h" />
     <ClInclude Include="WebViewEvents.h" />
     <ClInclude Include="WebViewProfile.h" />
-    <ClInclude Include="Wininet.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WebView2.rc" />

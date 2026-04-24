@@ -328,8 +328,6 @@ LRESULT CMainFrame::OnScenarioWininetGetCookies(WORD /*wNotifyCode*/, WORD /*wID
 		m_webview2->getwininetcookies(domain);
 	}
 	return S_OK;
-
-
 }
 
 LRESULT CMainFrame::OnScenarioWebViewDeleteAllCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
