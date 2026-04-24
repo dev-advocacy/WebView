@@ -20,6 +20,11 @@ LRESULT CURLCombo::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bH
 	{
 		if (parentFrame_ != nullptr)
 		{
+			if (::IsWindow(parentFrame_) != TRUE)
+			{
+				parentFrame_ = GetTopLevelWindow();
+			}
+
 			std::wstring text_url;
 			text_url.resize(1024);
 			if (GetItemText(this->GetCurSel(), &text_url[0], 1024) == TRUE)
@@ -31,7 +36,7 @@ LRESULT CURLCombo::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bH
 					::SendMessageW(parentFrame_, MSG_NAVIGATE_CALLBACK, 0, LPARAM(text_url.c_str()));
 				}
 			}
-		}
+		}	
 	}
 	return 0;
 }
@@ -51,6 +56,12 @@ BOOL CURLCombo::PreTranslateMessage(MSG* pMsg)
 		{
 			if (parentFrame_ != nullptr)
 			{
+
+				if (::IsWindow(parentFrame_) != TRUE)
+				{
+					parentFrame_ = GetTopLevelWindow();
+				}
+
 				auto len = GetWindowTextLength() + 1;
 				std::wstring text_url;
 				text_url.resize(len);
