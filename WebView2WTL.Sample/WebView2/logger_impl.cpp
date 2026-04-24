@@ -2,73 +2,83 @@
 // This file intentionally does not include OpenTelemetry headers.
 
 #include "logger.h"
-#include <iostream>
+
+// Defensive: WTL/ATL macro collisions
+#ifdef L
+#undef L
+#endif
+#ifdef R
+#undef R
+#endif
+
 #include <chrono>
 #include <ctime>
-#include <sstream>
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 
-void InitializeLogging()
-{
-    // no-op for simple logger
-}
+// telemetry
+#include <memory>
+#include <opentelemetry/logs/provider.h>
+#include <opentelemetry/sdk/logs/logger_provider.h>
+#include <opentelemetry/sdk/logs/simple_log_record_processor.h>
 
-static const char* SeverityToString(opentelemetry::logs::Severity s)
+namespace logs_api = opentelemetry::logs;
+
+static opentelemetry::nostd::shared_ptr<logs_api::Logger> g_logger;
+
+static logs_api::Severity ToOtelSeverity(LogSeverity s)
 {
-    using Severity = opentelemetry::logs::Severity;
     switch (s)
     {
-    case Severity::kTrace: return "TRACE";
-    case Severity::kTrace2: return "TRACE2";
-    case Severity::kTrace3: return "TRACE3";
-    case Severity::kTrace4: return "TRACE4";
-    case Severity::kDebug: return "DEBUG";
-    case Severity::kDebug2: return "DEBUG2";
-    case Severity::kDebug3: return "DEBUG3";
-    case Severity::kDebug4: return "DEBUG4";
-    case Severity::kInfo: return "INFO";
-    case Severity::kInfo2: return "INFO2";
-    case Severity::kInfo3: return "INFO3";
-    case Severity::kInfo4: return "INFO4";
-    case Severity::kWarn: return "WARN";
-    case Severity::kWarn2: return "WARN2";
-    case Severity::kWarn3: return "WARN3";
-    case Severity::kWarn4: return "WARN4";
-    case Severity::kError: return "ERROR";
-    case Severity::kError2: return "ERROR2";
-    case Severity::kError3: return "ERROR3";
-    case Severity::kError4: return "ERROR4";
-    case Severity::kFatal: return "FATAL";
-    case Severity::kFatal2: return "FATAL2";
-    case Severity::kFatal3: return "FATAL3";
-    case Severity::kFatal4: return "FATAL4";
-    default: return "UNKNOWN";
+    case LogSeverity::Trace: return logs_api::Severity::kTrace;
+    case LogSeverity::Debug: return logs_api::Severity::kDebug;
+    case LogSeverity::Info:  return logs_api::Severity::kInfo;
+    case LogSeverity::Warn:  return logs_api::Severity::kWarn;
+    case LogSeverity::Error: return logs_api::Severity::kError;
+    case LogSeverity::Fatal: return logs_api::Severity::kFatal;
+    default:                 return logs_api::Severity::kInfo;
     }
 }
 
-void LogMessage(opentelemetry::logs::Severity severity, std::string_view message)
+static const char* ToText(LogSeverity s)
 {
-    using namespace std::chrono;
-    auto now = system_clock::now();
-    std::time_t tt = system_clock::to_time_t(now);
-    tm local_tm;
-    localtime_s(&local_tm, &tt);
+    switch (s)
+    {
+    case LogSeverity::Trace: return "TRACE";
+    case LogSeverity::Debug: return "DEBUG";
+    case LogSeverity::Info:  return "INFO";
+    case LogSeverity::Warn:  return "WARN";
+    case LogSeverity::Error: return "ERROR";
+    case LogSeverity::Fatal: return "FATAL";
+    default:                 return "INFO";
+    }
+}
 
-    char timebuf[64];
-    if (std::strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", &local_tm) == 0)
-        timebuf[0] = '\0';
+void InitializeLogging()
+{
+    // Use default provider for now; later you can plug OTLP provider here.
+    auto provider = logs_api::Provider::GetLoggerProvider();
+    g_logger = provider->GetLogger("webview2client");
+}
 
-    std::string line;
-    line.reserve(128 + message.size());
-    line += '[';
-    line += timebuf;
-    line += "] [";
-    line += SeverityToString(severity);
-    line += "] ";
-    line += message;
-    line += '\n';
+static opentelemetry::nostd::string_view ToOtelView(std::string_view s) noexcept
+{
+    return opentelemetry::nostd::string_view{ s.data(), s.size() };
+}
 
-    std::cout << line;
+void LogMessage(LogSeverity severity, std::string_view message)
+{
+    if (!g_logger)
+    {
+        InitializeLogging();
+    }
+
+    // OutputDebugString sink
+    std::string line(message);
+    line.push_back('\n');
     OutputDebugStringA(line.c_str());
+
+    // OpenTelemetry sink
+    if (g_logger)
+    {
+        g_logger->EmitLogRecord(ToOtelSeverity(severity), ToOtelView(message));
+    }
 }

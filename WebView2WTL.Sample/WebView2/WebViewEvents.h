@@ -206,7 +206,7 @@ namespace WebView2
 		/// <param name="webResourceRequest"></param>
 		void trace_webresource_response_received_event(wil::com_ptr<ICoreWebView2WebResourceRequest> webResourceRequest)
 		{
-			//LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 		}
 
 
@@ -346,7 +346,7 @@ namespace WebView2
 		}
 		void trace_webresource_request_event(wil::com_ptr<ICoreWebView2WebResourceRequestedEventArgs> args)
 		{
-			//LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 		}
 		void raise_webresource_request_event(wil::com_ptr<ICoreWebView2WebResourceRequestedEventArgs> args)
 		{

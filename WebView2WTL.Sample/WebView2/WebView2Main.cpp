@@ -6,6 +6,7 @@
 #include "resource.h"
 #include "aboutdlg.h"
 #include "MainFrm.h"
+#include "logger.h"
 
 CAppModule _Module;
 
@@ -130,10 +131,12 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	HRESULT hRes = ::CoInitialize(NULL);
 	ATLASSERT(SUCCEEDED(hRes));
 
-	AtlInitCommonControls(ICC_COOL_CLASSES | ICC_BAR_CLASSES);	// add flags to support other controls
+	AtlInitCommonControls(ICC_COOL_CLASSES | ICC_BAR_CLASSES);
 
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
+
+	InitializeLogging();
 
 	int nRet = 0;
 	// BLOCK: Run application

@@ -93,9 +93,6 @@
     <ClCompile Include="DetectDlg.cpp">
       <Filter>Source Files\Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="Wininet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DomainDlg.cpp">
       <Filter>Source Files\Dialogs</Filter>
     </ClCompile>

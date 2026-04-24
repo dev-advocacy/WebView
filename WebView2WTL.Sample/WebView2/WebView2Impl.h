@@ -107,41 +107,41 @@ namespace WebView2
 	{
 		LOG_TRACE(__FUNCTION__);
 		WebView2::Utility::InitCOM();
-			m_callbacks[CallbackType::CreationCompleted] = nullptr;
-			m_callbacks[CallbackType::NavigationCompleted] = nullptr;
-			m_callbacks[CallbackType::AuthenticationCompleted] = nullptr;
-			m_callbacks[CallbackType::NavigationStarting] = nullptr;
+		m_callbacks[CallbackType::CreationCompleted] = nullptr;
+		m_callbacks[CallbackType::NavigationCompleted] = nullptr;
+		m_callbacks[CallbackType::AuthenticationCompleted] = nullptr;
+		m_callbacks[CallbackType::NavigationStarting] = nullptr;
 
-			SetCreationCompletedCallback([](CWebView2Impl<T>* parent)
-				{
-					LOG_TRACE("CreationCompletedCallback");
-					T* wnd = static_cast<T*>(parent);
-					::MessageBoxW(wnd->m_hWnd, L"Creation completed", L"DEBUG", MB_OK | MB_ICONINFORMATION);
-				});
+		SetCreationCompletedCallback([](CWebView2Impl<T>* parent)
+			{
+				LOG_TRACE("CreationCompletedCallback");
+				T* wnd = static_cast<T*>(parent);
+				::MessageBoxW(wnd->m_hWnd, L"Creation completed", L"DEBUG", MB_OK | MB_ICONINFORMATION);
+			});
 
-			SetAuthenticationCompletedCallback([](CWebView2Impl<T>* parent)
-				{
-					LOG_TRACE("AuthenticationCompletedCallback");
-					T* wnd = static_cast<T*>(parent);
-					::MessageBoxW(wnd->m_hWnd, L"Authentication completed", L"DEBUG", MB_OK | MB_ICONINFORMATION);
-				});
+		SetAuthenticationCompletedCallback([](CWebView2Impl<T>* parent)
+			{
+				LOG_TRACE("AuthenticationCompletedCallback");
+				T* wnd = static_cast<T*>(parent);
+				::MessageBoxW(wnd->m_hWnd, L"Authentication completed", L"DEBUG", MB_OK | MB_ICONINFORMATION);
+			});
 
-			SetNavigationStartingCallback([](CWebView2Impl<T>* parent, std::wstring uri)
-				{
-					LOG_TRACE(std::string("NavigationStartingCallback URI=") + WideToNarrow(uri));
-					T* wnd = static_cast<T*>(parent);
-					::MessageBoxW(wnd->m_hWnd, std::format(L"Navigation starting to URI {}", uri).c_str(),
-						L"DEBUG", MB_OK | MB_ICONINFORMATION);
-				});
+		SetNavigationStartingCallback([](CWebView2Impl<T>* parent, std::wstring uri)
+			{
+				LOG_TRACE(std::string("NavigationStartingCallback URI=") + WideToNarrow(uri));
+				T* wnd = static_cast<T*>(parent);
+				::MessageBoxW(wnd->m_hWnd, std::format(L"Navigation starting to URI {}", uri).c_str(),
+					L"DEBUG", MB_OK | MB_ICONINFORMATION);
+			});
 
-			SetNavigationCompletedCallback([](CWebView2Impl<T>* parent, std::wstring uri)
-				{
-					LOG_TRACE(std::string("NavigationCompletedCallback URI=") + WideToNarrow(uri));
-					T* wnd = static_cast<T*>(parent);
-					::MessageBoxW(wnd->m_hWnd, std::format(L"Navigation completed to URI {}", uri).c_str(),
-						L"DEBUG", MB_OK | MB_ICONINFORMATION);
-				});
-		}
+		SetNavigationCompletedCallback([](CWebView2Impl<T>* parent, std::wstring uri)
+			{
+				LOG_TRACE(std::string("NavigationCompletedCallback URI=") + WideToNarrow(uri));
+				T* wnd = static_cast<T*>(parent);
+				::MessageBoxW(wnd->m_hWnd, std::format(L"Navigation completed to URI {}", uri).c_str(),
+					L"DEBUG", MB_OK | MB_ICONINFORMATION);
+			});
+	}
 		CWebView2Impl(std::wstring brower_directory, std::wstring user_data_directory, std::wstring url)
 		{
 			if (!url.empty())
@@ -815,7 +815,7 @@ namespace WebView2
 				auto authV = new TCHAR[1000];
 				hr = headers->GetHeader(L"Authorization", &authV);
 				RETURN_IF_FAILED_MSG(hr, "function=%s, message=%s, hr=%d\n", __func__, std::system_category().message(hr).data(), hr);
-				LOG_TRACE(std::string(__FUNCTION__) + " name=Authorization value=" + WideToNarrow(authV));
+				LOG_TRACE(std::string(__FUNCTION__) + " name=Authorization value=" + WideToNarrow(std::wstring(authV)));
 				auto& callback = m_callbacks[CallbackType::AuthenticationCompleted];
 				RETURN_IF_NULL_ALLOC_MSG(callback, "function=%s message=unable to create callback", __func__);
 				RunAsync(callback);

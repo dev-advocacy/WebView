@@ -138,7 +138,7 @@ namespace WebView2
 		/// </summary>
 		LRESULT OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 		{
-			//LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 			T* pT = static_cast<T*>(this);
 			if (::IsWindow(pT->m_hWnd))
 			{
@@ -244,9 +244,7 @@ namespace WebView2
 		 */
 		void resize_web_view() const
 		{
-			
-
-			//LOG_TRACE << __FUNCTION__;
+			LOG_TRACE(__FUNCTION__);
 			if (m_controller)
 			{
 				const SIZE webViewSize = { static_cast<LONG>((m_webViewBounds.right - m_webViewBounds.left) * m_webViewRatio * m_webViewScale),static_cast<LONG>((m_webViewBounds.bottom - m_webViewBounds.top) * m_webViewRatio * m_webViewScale) };
@@ -263,7 +261,7 @@ namespace WebView2
 		*/
 		HRESULT InitializeCursorCapture(HWND hwnd)
 		{
-			LOG_DEBUG(__FUNCTION__);
+			//LOG_DEBUG(__FUNCTION__);
 			RETURN_IF_FAILED(
 				m_compositionController->add_CursorChanged(Microsoft::WRL::Callback<
 					ICoreWebView2CursorChangedEventHandler>([this, hwnd](ICoreWebView2CompositionController* sender,

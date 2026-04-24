@@ -72,8 +72,8 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 	HRESULT hr = ::GetAvailableCoreWebView2BrowserVersionString(nullptr, &edgeVersionInfo);
 	if (FAILED(hr) || (edgeVersionInfo == nullptr))
 	{
-		LOG_TRACE("The WebView2 runtime is not installed");
-		LOG_TRACE("Please install the WebView2 runtime before running this application available on https://go.microsoft.com/fwlink/p/?LinkId=2124703");
+		/*LOG_TRACE("The WebView2 runtime is not installed");
+		LOG_TRACE("Please install the WebView2 runtime before running this application available on https://go.microsoft.com/fwlink/p/?LinkId=2124703");*/
 		return (hr);
 	}
 	LOG_TRACE(std::string("Found installed WebView version=") + WideToNarrow(edgeVersionInfo));

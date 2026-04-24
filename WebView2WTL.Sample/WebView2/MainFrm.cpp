@@ -188,7 +188,7 @@ LRESULT CMainFrame::OnScenarioWebRequest(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 		auto hr = m_webview2->WebRequest(webrequestdlg.get_uri(), webrequestdlg.get_verb(), webrequestdlg.get_data(), L"Content-Type: application/json");
 		if (FAILED(hr))
 		{
-			LOG_TRACE(std::string("The WebView2 WebRequest failed | message: 0x") + std::to_string(hr));			
+			LOG_TRACE(std::string("The WebView2 WebRequest failed | message: 0x") + std::to_string(hr));
 		}
 	}
 	return S_OK;

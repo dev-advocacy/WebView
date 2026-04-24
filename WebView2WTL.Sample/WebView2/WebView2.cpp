@@ -6,6 +6,7 @@
 #include "resource.h"
 
 #include "WebView2.h"
+#include "logger.h"
 
 /// <summary>
 /// TODO : validate parameters

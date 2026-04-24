@@ -510,15 +510,13 @@ namespace WebView2
 										 bool isRedirected, bool isUserInitiated) override
 	{
 		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  uri=") + WideToNarrow(std::wstring(uri)) + ", ID=" + std::to_string(navigationId) + 
-				  ", redirected=" + std::to_string(isRedirected) + ", user initiated=" + std::to_string(isUserInitiated));
+		LOG_TRACE(std::string("  uri=") + WideToNarrow(std::wstring(uri)) + ", ID=" + std::to_string(navigationId) + ", redirected=" + std::to_string(isRedirected) + ", user initiated=" + std::to_string(isUserInitiated));
 	}
 		virtual void NavigationCompleteEvent(bool isSuccess, unsigned long long navigationId,
 											 COREWEBVIEW2_WEB_ERROR_STATUS errorStatus) override
 		{
 		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  success=") + std::to_string(isSuccess) + ", ID=" + std::to_string(navigationId) +
-				  ", error status=" + std::to_string(errorStatus));
+		LOG_TRACE(std::string("  success=") + std::to_string(isSuccess) + ", ID=" + std::to_string(navigationId) + ", error status=" + std::to_string(errorStatus));
 			
 			if (m_is_test == true && m_start == true)
 			{
@@ -539,8 +537,7 @@ namespace WebView2
 								  COREWEBVIEW2_WEB_RESOURCE_CONTEXT resourceContext) override
 		{
 		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)) +
-				  ", resource context=" + std::to_string(resourceContext));
+		LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)) + ", resource context=" + std::to_string(resourceContext));
 		}
 		virtual void ClientCertificateRequestedEvent(std::vector<ClientCertificate> client_certificates, wil::com_ptr<ICoreWebView2Deferral> deferral) override
 		{
@@ -628,7 +625,7 @@ namespace WebView2
 			if (m_is_test == true)
 			{
 				m_port = m_port.empty() ? L"9222" : m_port;
-				LOG_DEBUG(std::string("Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=") + WideToNarrow(m_port));
+				//LOG_DEBUG(std::string("Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=") + WideToNarrow(m_port));
 				argbrowser = L"--remote-debugging-port=" + m_port;
 			}
 			if (log == true)
@@ -636,13 +633,13 @@ namespace WebView2
 				fs::path unique_file;
 				if (!Utility::GetUniqueLogFileName(unique_file))
 				{
-					LOG_DEBUG(std::string("Create unique log file for log-net-log filename: ") + unique_file.string());
+					//LOG_DEBUG(std::string("Create unique log file for log-net-log filename: ") + unique_file.string());
 					auto log = L"--log-net-log=" + unique_file.native();
 					argbrowser += L" " + log;					
 				}
 				else
 				{
-					LOG_ERROR("Failed to create unique log file name for log-net-log");
+					//LOG_ERROR("Failed to create unique log file name for log-net-log");
 				}
 			}
 			if (!argbrowser.empty())

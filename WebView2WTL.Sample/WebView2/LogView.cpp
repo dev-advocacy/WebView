@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "LogView.h"
+#include "logger.h"
 
 CLogView::CLogView()
 {
@@ -34,13 +35,8 @@ void CLogView::Create(HWND hWndParent, ATL::_U_RECT rect)
 
 void CLogView::MeasureItem(MEASUREITEMSTRUCT* pMeasureItemStruct)
 {
-    OutputDebugStringA("CLogView::MeasureItem - debug");
+    LOG_DEBUG("CLogView::MeasureItem - debug");
     CClientDC dc(*this);
-
-    //Win32::GdiObjectSelection font(dc, GetFont());
-    //TEXTMETRIC metric;
-    //dc.GetTextMetrics(&metric);
-    //pMeasureItemStruct->itemHeight = metric.tmHeight;
 }
 
 /// <summary>
@@ -62,10 +58,9 @@ RECT CLogView::GetItemRect(int iItem, unsigned code) const
 /// <param name="pDrawItemStruct"></param>
 void CLogView::DrawItem(DRAWITEMSTRUCT* pDrawItemStruct)
 {
-    OutputDebugStringA("CLogView::DrawItem - debug");
+    LOG_DEBUG("CLogView::DrawItem - debug");
     DrawItem(pDrawItemStruct->hDC, pDrawItemStruct->itemID, pDrawItemStruct->itemState);
 }
-
 
 /// <summary>
 /// 
@@ -83,13 +78,4 @@ void CLogView::DrawItem(CDCHandle dc, int iItem, unsigned /*iItemState*/)
     auto txColor = RGB(0, 0, 0);
 
     dc.FillSolidRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, bkColor);
-
-    //Win32::ScopedBkColor bcol(dc, bkColor);
-    //Win32::ScopedTextColor tcol(dc, txColor);
-
-    //std::wstring text = wstringbuilder() << iItem + 1 << L" If the logview is rendered correctly then exactly 40 lines will fit";
-    //dc.DrawText(text.c_str(), text.size(), &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
-
-    //if (focused)
-    //    dc.DrawFocusRect(&rect);
 }

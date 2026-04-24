@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CheckFailure.h"
 #include "osutility.h"
+#include "logger.h"
 
 
 namespace os
@@ -42,12 +43,12 @@ namespace os
 
         if (FAILED(hr = m_pWICFactory->CreateBitmap(static_cast<UINT>(s.height), static_cast<UINT>(s.width), GUID_WICPixelFormat32bppBGR, WICBitmapCacheOnLoad, &pWICBitmap)))
         {
-            OutputDebugString(L"pWICFactory failed");
+            LOG_ERROR("pWICFactory failed");
             return (hr);
         }
         if (FAILED(hr = m_pD2DFactory->CreateWicBitmapRenderTarget(pWICBitmap.get(), D2D1::RenderTargetProperties(), &pRT)))
         {
-            OutputDebugString(L"pD2DFactory failed");
+            LOG_ERROR("pD2DFactory failed");
             return (hr);
         }
 
@@ -151,13 +152,13 @@ namespace os
 
         if (FAILED(hr = m_pWICFactory->CreateBitmap(static_cast<UINT>(imagesize.width * factor), static_cast<UINT>(imagesize.height * factor), GUID_WICPixelFormat32bppBGR, WICBitmapCacheOnLoad, &m_pWICBitmap)))
         {
-            OutputDebugString(L"pWICFactory failed");
+            LOG_ERROR("pWICFactory failed");
             return;
         }
 
         if (FAILED(hr = m_pD2DFactory->CreateWicBitmapRenderTarget(m_pWICBitmap.get(), D2D1::RenderTargetProperties(), &pRT)))
         {
-            OutputDebugString(L"pD2DFactory failed");
+            LOG_ERROR("pD2DFactory failed");
             return;
         }
 
@@ -176,7 +177,7 @@ namespace os
 
         if (FAILED(hr = m_pWICFactory->CreateStream(&pStream)))
         {
-            OutputDebugString(L"CreateStream failed");
+            LOG_ERROR("CreateStream failed");
             return;
         }
 
@@ -184,52 +185,52 @@ namespace os
 
         if (FAILED(hr = pStream->InitializeFromFilename(str_destfile.c_str(), GENERIC_WRITE)))
         {
-            OutputDebugString(L"InitializeFromFilename failed");
+            LOG_ERROR("InitializeFromFilename failed");
             return;
         }
         if (FAILED(hr = m_pWICFactory->CreateEncoder(GUID_ContainerFormatPng, NULL, &pEncoder)))
         {
-            OutputDebugString(L"CreateEncoder failed");
+            LOG_ERROR("CreateEncoder failed");
             return;
         }
         if (FAILED(hr = pEncoder->Initialize(pStream.get(), WICBitmapEncoderNoCache)))
         {
-            OutputDebugString(L"Initialize failed");
+            LOG_ERROR("Initialize failed");
             return;
         }
         if (FAILED(hr = pEncoder->CreateNewFrame(&pFrameEncode, NULL)))
         {
-            OutputDebugString(L"CreateNewFrame failed");
+            LOG_ERROR("CreateNewFrame failed");
             return;
         }
         if (FAILED(hr = pFrameEncode->Initialize(NULL)))
         {
-            OutputDebugString(L"Initialize failed");
+            LOG_ERROR("Initialize failed");
             return;
         }
         if (FAILED(hr = pFrameEncode->SetSize(static_cast<UINT>(imagesize.width * factor), static_cast<UINT>(imagesize.height * factor))))
         {
-            OutputDebugString(L"SetSize failed");
+            LOG_ERROR("SetSize failed");
             return;
         }
         if (FAILED(hr = pFrameEncode->SetPixelFormat(&format)))
         {
-            OutputDebugString(L"SetPixelFormat failed");
+            LOG_ERROR("SetPixelFormat failed");
             return;
         }
         if (FAILED(hr = pFrameEncode->WriteSource(m_pWICBitmap.get(), NULL)))
         {
-            OutputDebugString(L"WriteSource failed");
+            LOG_ERROR("WriteSource failed");
             return;
         }
         if (FAILED(hr = pFrameEncode->Commit()))
         {
-            OutputDebugString(L"Commit failed");
+            LOG_ERROR("Commit failed");
             return;
         }
         if (FAILED(hr = pEncoder->Commit()))
         {
-            OutputDebugString(L"Commit failed");
+            LOG_ERROR("Commit failed");
             return;
         }
 

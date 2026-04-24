@@ -81,16 +81,16 @@ namespace WebView2
 			wil::com_ptr<ICoreWebView2HttpHeadersCollectionIterator> iterator;
 			RETURN_IF_FAILED(responseHeaders->GetIterator(&iterator));
 			
-			//BOOL hasCurrent = FALSE;
-			//LOG_TRACE << "Dumping all headers for debugging purposes:";
-			//while (SUCCEEDED(iterator->get_HasCurrentHeader(&hasCurrent)) && hasCurrent)
-			//{
-			//	wil::unique_cotaskmem_string headerName;
-			//	wil::unique_cotaskmem_string headerValue;
-			//	RETURN_IF_FAILED(iterator->GetCurrentHeader(&headerName, &headerValue));
-			//	LOG_TRACE << __FUNCTION__ << " Header: " << headerName.get() << " Value: " << headerValue.get();
-			//	RETURN_IF_FAILED(iterator->MoveNext(&hasCurrent));
-			//}
+			BOOL hasCurrent = FALSE;
+			LOG_TRACE("Dumping all headers for debugging purposes:");
+			while (SUCCEEDED(iterator->get_HasCurrentHeader(&hasCurrent)) && hasCurrent)
+			{
+				wil::unique_cotaskmem_string headerName;
+				wil::unique_cotaskmem_string headerValue;
+				RETURN_IF_FAILED(iterator->GetCurrentHeader(&headerName, &headerValue));
+				LOG_TRACE(std::string(__FUNCTION__) + " Header: " + WideToNarrow(headerName.get()) + " Value: " + WideToNarrow(headerValue.get()));
+				RETURN_IF_FAILED(iterator->MoveNext(&hasCurrent));
+			}
 
 			wil::com_ptr<ICoreWebView2HttpHeadersCollectionIterator> it;
 			if (responseHeaders->GetHeaders(L"set-cookie", &it) == S_OK)
@@ -98,20 +98,13 @@ namespace WebView2
 				BOOL hasNext;				
 				wil::unique_cotaskmem_string uri;
 				RETURN_IF_FAILED(request->get_Uri(&uri));
-				// Dump all Set-Cookie headers
-				//LOG_TRACE << "Dumping all Set-Cookie headers:";
+				LOG_TRACE("Dumping all Set-Cookie headers:");
 
 				for (it->get_HasCurrentHeader(&hasNext); hasNext; it->MoveNext(&hasNext))
 				{
 					wil::unique_cotaskmem_string name, value;
 					it->GetCurrentHeader(&name, &value);
-					// dump values
-
-					//os::Wininet wininet;
-
-					//wininet.SyncCookie(uri.get(), name.get(), value.get());
-
-					//LOG_TRACE << __FUNCTION__ << " uri:" << uri.get() << " Set-Cookie Header: " << name.get() << " Value: " << value.get();
+					LOG_TRACE(std::string(__FUNCTION__) + " uri:" + WideToNarrow(uri.get()) + " Set-Cookie Header: " + WideToNarrow(name.get()) + " Value: " + WideToNarrow(value.get()));
 				}
 			}			
 			return S_OK;
