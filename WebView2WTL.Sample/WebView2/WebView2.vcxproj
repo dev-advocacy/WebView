@@ -87,6 +87,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Core;$(ProjectDir)Security;$(ProjectDir)UI;$(ProjectDir)Messaging;$(ProjectDir)Utilities;$(ProjectDir)Logger;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -125,6 +126,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Core;$(ProjectDir)Security;$(ProjectDir)UI;$(ProjectDir)Messaging;$(ProjectDir)Utilities;$(ProjectDir)Logger;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -162,6 +164,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Core;$(ProjectDir)Security;$(ProjectDir)UI;$(ProjectDir)Messaging;$(ProjectDir)Utilities;$(ProjectDir)Logger;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling />
@@ -198,6 +201,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Core;$(ProjectDir)Security;$(ProjectDir)UI;$(ProjectDir)Messaging;$(ProjectDir)Utilities;$(ProjectDir)Logger;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -231,72 +235,72 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AboutDlg.cpp" />
-    <ClCompile Include="DomainDlg.cpp" />
-    <ClCompile Include="DetectDlg.cpp" />
-    <ClCompile Include="CertificateDlg.cpp" />
-    <ClCompile Include="logger_impl.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="UI\AboutDlg.cpp" />
+    <ClCompile Include="UI\DomainDlg.cpp" />
+    <ClCompile Include="UI\DetectDlg.cpp" />
+    <ClCompile Include="Security\CertificateDlg.cpp" />
+    <ClCompile Include="Logger\logger_impl.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
-    <ClCompile Include="LogView.cpp" />
-    <ClCompile Include="RegisterMessages.cpp" />
-    <ClCompile Include="SingleWebView2.cpp" />
+    <ClCompile Include="UI\LogView.cpp" />
+    <ClCompile Include="Messaging\RegisterMessages.cpp" />
+    <ClCompile Include="Core\SingleWebView2.cpp" />
     <ClCompile Include="Thread.cpp" />
-    <ClCompile Include="UrlCombo.cpp" />
-    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="UI\UrlCombo.cpp" />
+    <ClCompile Include="Utilities\Utility.cpp" />
     <ClCompile Include="CheckFailure.cpp" />
-    <ClCompile Include="MainFrm.cpp" />
-    <ClCompile Include="osutility.cpp" />
+    <ClCompile Include="UI\MainFrm.cpp" />
+    <ClCompile Include="Utilities\osutility.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="WebRequestDlg.cpp" />
-    <ClCompile Include="WebView2.cpp" />
+    <ClCompile Include="UI\WebRequestDlg.cpp" />
+    <ClCompile Include="Core\WebView2.cpp" />
     <ClCompile Include="WebView2Main.cpp" />
-    <ClCompile Include="WebViewDlg.cpp" />
-    <ClCompile Include="WebViewProfile.cpp" />
+    <ClCompile Include="Core\WebViewDlg.cpp" />
+    <ClCompile Include="Utilities\WebViewProfile.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AboutDlg.h" />
-    <ClInclude Include="CommandLineParser.h" />
-    <ClInclude Include="DomainDlg.h" />
-    <ClInclude Include="Cookie.h" />
-    <ClInclude Include="DetectDlg.h" />
-    <ClInclude Include="CertificateDlg.h" />
-    <ClInclude Include="ClientCertificate.h" />
-    <ClInclude Include="ColoredControls.h" />
-    <ClInclude Include="CompositionHost.h" />
-    <ClInclude Include="EdgeInfomation.h" />
-    <ClInclude Include="headersprop.h" />
-    <ClInclude Include="ImageListBox.h" />
-    <ClInclude Include="LogView.h" />
-    <ClInclude Include="RegisterMessages.h" />
-    <ClInclude Include="SingleWebView2.h" />
+    <ClInclude Include="Logger\logger.h" />
+    <ClInclude Include="UI\AboutDlg.h" />
+    <ClInclude Include="Utilities\CommandLineParser.h" />
+    <ClInclude Include="UI\DomainDlg.h" />
+    <ClInclude Include="Security\Cookie.h" />
+    <ClInclude Include="UI\DetectDlg.h" />
+    <ClInclude Include="Security\CertificateDlg.h" />
+    <ClInclude Include="Security\ClientCertificate.h" />
+    <ClInclude Include="UI\ColoredControls.h" />
+    <ClInclude Include="Core\CompositionHost.h" />
+    <ClInclude Include="Utilities\EdgeInfomation.h" />
+    <ClInclude Include="Utilities\headersprop.h" />
+    <ClInclude Include="UI\ImageListBox.h" />
+    <ClInclude Include="UI\LogView.h" />
+    <ClInclude Include="Messaging\RegisterMessages.h" />
+    <ClInclude Include="Core\SingleWebView2.h" />
     <ClInclude Include="Thread.h" />
-    <ClInclude Include="UrlCombo.h" />
-    <ClInclude Include="Utility.h" />
+    <ClInclude Include="UI\UrlCombo.h" />
+    <ClInclude Include="Utilities\Utility.h" />
     <ClInclude Include="CheckFailure.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="logger.h" />
-    <ClInclude Include="MainFrm.h" />
-    <ClInclude Include="osutility.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="UI\MainFrm.h" />
+    <ClInclude Include="Utilities\osutility.h" />
+    <ClInclude Include="Resources\resource.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="WebRequestDlg.h" />
-    <ClInclude Include="WebView2.h" />
-    <ClInclude Include="WebView2Impl2.h" />
-    <ClInclude Include="WebViewAuthentication.h" />
-    <ClInclude Include="WebViewDlg.h" />
-    <ClInclude Include="WebViewEvents.h" />
-    <ClInclude Include="WebViewProfile.h" />
+    <ClInclude Include="UI\WebRequestDlg.h" />
+    <ClInclude Include="Core\WebView2.h" />
+    <ClInclude Include="Core\WebView2Impl2.h" />
+    <ClInclude Include="Security\WebViewAuthentication.h" />
+    <ClInclude Include="Core\WebViewDlg.h" />
+    <ClInclude Include="Utilities\WebViewEvents.h" />
+    <ClInclude Include="Utilities\WebViewProfile.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="WebView2.rc" />
+    <ResourceCompile Include="Resources\WebView2.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\certificate.ico" />

@@ -1,17 +1,44 @@
 ﻿#pragma once
-#include "pch.h"
-#include "resource.h"
-#include "headersprop.h"
-#include "logger.h"
-#include "Cookie.h"
-#include "CompositionHost.h"
-#include "WebViewEvents.h"
-#include "WebViewAuthentication.h"
-#include "SingleWebView2.h"
-#include "RegisterMessages.h"
 
-namespace WebView2
+#include "../pch.h"
+
+#include <WebView2.h>
+#include <WebView2EnvironmentOptions.h>
+//#include <wil/com.h>
+//#include <wil/result.h>
+//#include <wrl.h>
+//#include <atlbase.h>
+//#include <atlwin.h>
+//#include <string>
+//#include <memory>
+//#include <vector>
+//#include <list>
+//#include <future>
+//#include <mutex>
+//#include <format>
+//#include <filesystem>
+//#include <cpprest/json.h>
+
+#include "../Resources/resource.h"
+#include "../Utilities/headersprop.h"
+#include "../Logger/logger.h"
+#include "../Security/Cookie.h"
+#include "CompositionHost.h"
+#include "../Utilities/WebViewEvents.h"
+#include "../Security/WebViewAuthentication.h"
+#include "SingleWebView2.h"
+#include "../Messaging/RegisterMessages.h"
+#include "../Utilities/Utility.h"
+
+
+namespace WebView2::Core
 {
+	// Namespace aliases and using declarations
+	namespace fs = std::filesystem;
+
+	// Don't use namespace-scope using for types - causes circular dependencies
+	// Types will be qualified where used
+
 	// Add this struct at the top or in a suitable header
 
 	class ContextData
@@ -20,9 +47,9 @@ namespace WebView2
 		std::wstring			m_classname = L"Chrome_WidgetWin_0";
 		HWND					m_hwnd = nullptr;
 	};
-	
+
 	template <class T>
-	class CWebView2Impl2 : public CCompositionHost<T>, public IWebWiew2ImplEventCallback
+	class CWebView2Impl2 : public CCompositionHost<T>, Utilities::IWebWiew2ImplEventCallback
 	{
 	public:
 		std::wstring										m_url;
@@ -31,20 +58,20 @@ namespace WebView2
 		bool												m_is_modal = false;
 		bool												m_start = true;
 	private:
-		HWND												m_hwnd = nullptr;
-		wil::com_ptr<ICoreWebView2Environment>				m_webViewEnvironment = nullptr;
-		wil::com_ptr<ICoreWebView2CompositionController>	m_compositionController = nullptr;
-		wil::com_ptr<ICoreWebView2Controller>				m_controller = nullptr;
-		wil::com_ptr<ICoreWebView2Settings>					m_webSettings = nullptr;
-		wil::com_ptr<ICoreWebView2CookieManager>			m_cookieManager = nullptr;
-		wil::com_ptr<ICoreWebView2>							m_webView = nullptr;
-		std::unique_ptr<webview2_events>					m_webview2_events = nullptr;
-		std::unique_ptr<webview2_authentication_events>		m_webview2_authentication_events = nullptr;
-		std::list<std::future<void>>						m_asyncResults;
-		std::mutex											m_asyncResultsMutex;
-		bool												m_is_test = false;
-		std::wstring										m_port;
-		HWND												m_hwnd_parent = nullptr;
+		HWND														m_hwnd = nullptr;
+		wil::com_ptr<ICoreWebView2Environment>						m_webViewEnvironment = nullptr;
+		wil::com_ptr<ICoreWebView2CompositionController>			m_compositionController = nullptr;
+		wil::com_ptr<ICoreWebView2Controller>						m_controller = nullptr;
+		wil::com_ptr<ICoreWebView2Settings>							m_webSettings = nullptr;
+		wil::com_ptr<ICoreWebView2CookieManager>					m_cookieManager = nullptr;
+		wil::com_ptr<ICoreWebView2>									m_webView = nullptr;
+		std::unique_ptr<Utilities::webview2_events>					m_webview2_events = nullptr;
+		std::unique_ptr<WebView2::webview2_authentication_events>	m_webview2_authentication_events = nullptr;
+		std::list<std::future<void>>								m_asyncResults;
+		std::mutex													m_asyncResultsMutex;
+		bool														m_is_test = false;
+		std::wstring												m_port;
+		HWND														m_hwnd_parent = nullptr;
 	public:
 		// Message map and handlers
 		BEGIN_MSG_MAP(CWebView2Impl2)
@@ -53,7 +80,7 @@ namespace WebView2
 			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 			/*MESSAGE_HANDLER(WM_RUN_FUNCTOR, OnRunFunctor)*/
 
-			if (uMsg == CRegisteredMessages::RunFunctor())
+			if (uMsg == Messaging::CRegisteredMessages::RunFunctor())
 			{
 				bHandled = TRUE;
 				lResult = OnRunFunctor(uMsg, wParam, lParam, bHandled);
@@ -63,12 +90,12 @@ namespace WebView2
 
 		END_MSG_MAP()
 
-	CWebView2Impl2()
-	{
-		LOG_TRACE(__FUNCTION__);
-		m_webview2_events = std::make_unique<webview2_events>();
-		m_webview2_authentication_events = std::make_unique<webview2_authentication_events>();
-	};
+		CWebView2Impl2()
+		{
+			LOG_TRACE(__FUNCTION__);
+			m_webview2_events = std::make_unique<Utilities::webview2_events>();
+			m_webview2_authentication_events = std::make_unique<WebView2::webview2_authentication_events>();
+		};
 
 		void set_test(bool isTest, std::wstring port)
 		{
@@ -84,11 +111,11 @@ namespace WebView2
 		{
 			m_hwnd_parent = hwnd;
 		}
-	virtual ~CWebView2Impl2()
-	{
-		LOG_TRACE(__FUNCTION__);
-	}
-	#pragma region windows_event
+		virtual ~CWebView2Impl2()
+		{
+			LOG_TRACE(__FUNCTION__);
+		}
+#pragma region windows_event
 		/// <summary>
 		/// Handler for the WM_INITDIALOG message.
 		/// </summary>
@@ -96,11 +123,11 @@ namespace WebView2
 		/// <param name="wParam">Additional message information.</param>
 		/// <param name="lParam">Additional message information.</param>
 		/// <param name="bHandled">Indicates if the message was handled.</param
-	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
-	{
-		LOG_TRACE(__FUNCTION__);
+		LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+		{
+			LOG_TRACE(__FUNCTION__);
 
-		T* pT = static_cast<T*>(this);
+			T* pT = static_cast<T*>(this);
 			if (::IsWindow(pT->m_hWnd))
 			{
 				m_hwnd = pT->m_hWnd;
@@ -117,10 +144,10 @@ namespace WebView2
 		/// <param name="lParam">Additional message information.</param>
 		/// <param name="bHandled">Indicates if the message was handled.</param>
 		/// <returns>The result of the message processing.</returns>
-	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
-	{
-		LOG_TRACE(__FUNCTION__);
-		T* pT = static_cast<T*>(this);
+		LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+		{
+			LOG_TRACE(__FUNCTION__);
+			T* pT = static_cast<T*>(this);
 			if (::IsWindow(pT->m_hWnd))
 			{
 				m_hwnd = pT->m_hWnd;
@@ -138,7 +165,7 @@ namespace WebView2
 		/// <returns>The result of the message processing.</returns>
 		LRESULT	OnRunFunctor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 		{
-			auto* functor = reinterpret_cast<UIFunctorBase*>(wParam);
+			auto* functor = reinterpret_cast<Utilities::UIFunctorBase*>(wParam);
 
 			if (functor == nullptr)
 				return -1; // Error while posting the message. 
@@ -155,9 +182,9 @@ namespace WebView2
 
 			return 0;
 		}
-		#pragma endregion windows_event
+#pragma endregion windows_event
 
-		#pragma region WebView2_event
+#pragma region WebView2_event
 		/// <summary>
 		/// Navigates to the specified URL.
 		/// </summary>
@@ -193,46 +220,46 @@ namespace WebView2
 			//get_cookies_by_devtools();
 			return S_OK;
 		}
-	HRESULT showdevtools()
-	{
-		LOG_TRACE(__FUNCTION__);
+		HRESULT showdevtools()
+		{
+			LOG_TRACE(__FUNCTION__);
 
-		HRESULT hr= m_webView->OpenDevToolsWindow();
+			HRESULT hr = m_webView->OpenDevToolsWindow();
 
 			RETURN_IF_FAILED_MSG(hr, "Failed to delete all cookies, hr = % d", hr);
 			return (hr);
 		}
 
-	HRESULT clearcookies()
-	{
-		LOG_TRACE(__FUNCTION__);
-		//RETURN_IF_NULL_ALLOC(m_cookieManager);
-		//	HRESULT hr = m_cookieManager->DeleteAllCookies();
-		//	return (hr);
-    return S_OK;
-		}
-
-	HRESULT add_cookie(std::wstring domain, std::wstring name, std::wstring value)
-	{
-		LOG_TRACE(std::string(__FUNCTION__) + " domain=" + WideToNarrow(domain) + " name=" + WideToNarrow(name) + " value=" + WideToNarrow(value));
-		//  RETURN_IF_NULL_ALLOC(m_cookieManager);
-		//	wil::com_ptr<ICoreWebView2Cookie> cookie;
-		//	HRESULT hr = m_cookieManager->CreateCookie(name.c_str(), value.c_str(), domain.c_str(), L"/", &cookie);
-		//	RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
-
-			// cookie->put_IsHttpOnly(TRUE);
-			// cookie->put_IsSecure(TRUE);
-
-			// hr = m_cookieManager->AddOrUpdateCookie(cookie.get());
-			// RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+		HRESULT clearcookies()
+		{
+			LOG_TRACE(__FUNCTION__);
+			//RETURN_IF_NULL_ALLOC(m_cookieManager);
+			//	HRESULT hr = m_cookieManager->DeleteAllCookies();
+			//	return (hr);
 			return S_OK;
 		}
-	HRESULT delete_all_cookies()
-	{
-		LOG_TRACE(__FUNCTION__);
-		//RETURN_IF_NULL_ALLOC(m_cookieManager);
-		//	HRESULT hr = m_cookieManager->DeleteAllCookies();
-		//	RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+
+		HRESULT add_cookie(std::wstring domain, std::wstring name, std::wstring value)
+		{
+			LOG_TRACE(std::string(__FUNCTION__) + " domain=" + WideToNarrow(domain) + " name=" + WideToNarrow(name) + " value=" + WideToNarrow(value));
+			//  RETURN_IF_NULL_ALLOC(m_cookieManager);
+			//	wil::com_ptr<ICoreWebView2Cookie> cookie;
+			//	HRESULT hr = m_cookieManager->CreateCookie(name.c_str(), value.c_str(), domain.c_str(), L"/", &cookie);
+			//	RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+
+				// cookie->put_IsHttpOnly(TRUE);
+				// cookie->put_IsSecure(TRUE);
+
+				// hr = m_cookieManager->AddOrUpdateCookie(cookie.get());
+				// RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
+			return S_OK;
+		}
+		HRESULT delete_all_cookies()
+		{
+			LOG_TRACE(__FUNCTION__);
+			//RETURN_IF_NULL_ALLOC(m_cookieManager);
+			//	HRESULT hr = m_cookieManager->DeleteAllCookies();
+			//	RETURN_IF_FAILED_MSG(hr, "function = % s, message = % s, hr = % d", __func__, std::system_category().message(hr).data(), hr);
 			return true;
 		}
 
@@ -282,9 +309,9 @@ namespace WebView2
 			RETURN_IF_FAILED(hr);*/
 			return S_OK;
 		}
-		HRESULT getpostData(std::wstring postData, std::unique_ptr<char[]>& postDataBytes,int& sizeNeededForMultiByte)
+		HRESULT getpostData(std::wstring postData, std::unique_ptr<char[]>& postDataBytes, int& sizeNeededForMultiByte)
 		{
-			
+
 			sizeNeededForMultiByte = WideCharToMultiByte(CP_UTF8, 0, postData.c_str(), int(postData.size()), nullptr, 0, nullptr, nullptr);
 			if (sizeNeededForMultiByte > 0)
 			{
@@ -293,7 +320,7 @@ namespace WebView2
 			}
 			return S_OK;
 		}
-		HRESULT WebRequest(std::wstring uri, std::wstring verb, std::wstring data,std::wstring contenttype)
+		HRESULT WebRequest(std::wstring uri, std::wstring verb, std::wstring data, std::wstring contenttype)
 		{
 			HRESULT hr = S_OK;
 			bool readall = true;
@@ -315,7 +342,7 @@ namespace WebView2
 					wil::com_ptr<ICoreWebView2WebResourceRequest> webResourceRequest;
 					wil::com_ptr<IStream> postDataStream = SHCreateMemStream(reinterpret_cast<const BYTE*>(postDataBytes.get()), sizeNeededForMultiByte);
 					auto hr = webviewEnvironment2->CreateWebResourceRequest(uri.c_str(), verb.c_str(), postDataStream.get(), contenttype.c_str(), &webResourceRequest);
-					wil::com_ptr<ICoreWebView2WebResourceRequest> WebRequest = webResourceRequest.get();				
+					wil::com_ptr<ICoreWebView2WebResourceRequest> WebRequest = webResourceRequest.get();
 					wil::com_ptr<ICoreWebView2_2> webview2Ex;
 					RETURN_IF_FAILED(m_webView.get()->QueryInterface(IID_PPV_ARGS(&webview2Ex)));
 					RETURN_IF_FAILED(webview2Ex->NavigateWithWebResourceRequest(webResourceRequest.get()));
@@ -360,7 +387,7 @@ namespace WebView2
 			if (m_webView)
 			{
 				m_webView->ExecuteScript(L"document.execCommand(\"copy\")", nullptr);
-			}		
+			}
 		}
 		/// <summary>
 		/// Pastes the copied content into the WebView2 control.
@@ -383,7 +410,7 @@ namespace WebView2
 				m_webView->ExecuteScript(L"document.execCommand(\"cut\")", nullptr);
 			}
 		}
-		#pragma endregion WebView2_event
+#pragma endregion WebView2_event
 
 		inline std::wstring ToReadableDateTime(const std::wstring& wtimestamp)
 		{
@@ -468,7 +495,7 @@ namespace WebView2
 								// Add more fields as needed
 
 								cookies.push_back(cookie);
-								
+
 								std::wstring s = std::format(
 									L"domain:{0} expire:{1} expiresReadable:{2} path:{3} name={4} value={5} httpOnly={6} secure={7}",
 									cookie.domain, cookie.expires, cookie.expiresReadable, cookie.path, cookie.name, cookie.value,
@@ -476,7 +503,7 @@ namespace WebView2
 								LOG_TRACE(WideToNarrow(s));
 							}
 						}
-					}					
+					}
 				}
 			}
 			if (m_webview2_events)
@@ -484,10 +511,10 @@ namespace WebView2
 
 			return S_OK;
 		}
-	HRESULT get_cookies_by_devtools()
-	{
-		LOG_TRACE(__FUNCTION__);
-		RETURN_IF_NULL_ALLOC(m_webSettings);
+		HRESULT get_cookies_by_devtools()
+		{
+			LOG_TRACE(__FUNCTION__);
+			RETURN_IF_NULL_ALLOC(m_webSettings);
 			wil::com_ptr<ICoreWebView2DevToolsProtocolEventReceiver> receiver;
 			RETURN_IF_FAILED(m_webView->GetDevToolsProtocolEventReceiver(L"Network.getAllCookies", &receiver));
 			HRESULT hr = m_webView->CallDevToolsProtocolMethod(L"Network.getAllCookies", L"{}", Microsoft::WRL::Callback<ICoreWebView2CallDevToolsProtocolMethodCompletedHandler>([this](HRESULT error, PCWSTR resultJson) -> HRESULT
@@ -515,18 +542,18 @@ namespace WebView2
 			std::lock_guard guard(m_asyncResultsMutex);
 			m_asyncResults.push_back(std::move(result));
 		}
-	virtual void NavigationStartingEvent(std::wstring_view uri, unsigned long long navigationId, 
-										 bool isRedirected, bool isUserInitiated) override
-	{
-		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  uri=") + WideToNarrow(std::wstring(uri)) + ", ID=" + std::to_string(navigationId) + ", redirected=" + std::to_string(isRedirected) + ", user initiated=" + std::to_string(isUserInitiated));
-	}
-		virtual void NavigationCompleteEvent(bool isSuccess, unsigned long long navigationId,
-											 COREWEBVIEW2_WEB_ERROR_STATUS errorStatus) override
+		virtual void NavigationStartingEvent(std::wstring_view uri, unsigned long long navigationId,
+			bool isRedirected, bool isUserInitiated) override
 		{
-		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  success=") + std::to_string(isSuccess) + ", ID=" + std::to_string(navigationId) + ", error status=" + std::to_string(errorStatus));
-			
+			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE(std::string("  uri=") + WideToNarrow(std::wstring(uri)) + ", ID=" + std::to_string(navigationId) + ", redirected=" + std::to_string(isRedirected) + ", user initiated=" + std::to_string(isUserInitiated));
+		}
+		virtual void NavigationCompleteEvent(bool isSuccess, unsigned long long navigationId,
+			COREWEBVIEW2_WEB_ERROR_STATUS errorStatus) override
+		{
+			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE(std::string("  success=") + std::to_string(isSuccess) + ", ID=" + std::to_string(navigationId) + ", error status=" + std::to_string(errorStatus));
+
 			if (m_is_test == true && m_start == true)
 			{
 				T* pT = static_cast<T*>(this);
@@ -539,14 +566,14 @@ namespace WebView2
 		}
 		virtual void ResponseReceivedEvent(std::wstring_view method, std::wstring_view uri) override
 		{
-		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)));
+			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)));
 		}
 		virtual void RequestEvent(std::wstring_view method, std::wstring_view uri,
-								  COREWEBVIEW2_WEB_RESOURCE_CONTEXT resourceContext) override
+			COREWEBVIEW2_WEB_RESOURCE_CONTEXT resourceContext) override
 		{
-		LOG_TRACE(__FUNCTION__);
-		LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)) + ", resource context=" + std::to_string(resourceContext));
+			LOG_TRACE(__FUNCTION__);
+			LOG_TRACE(std::string("  method=") + WideToNarrow(std::wstring(method)) + ", uri=" + WideToNarrow(std::wstring(uri)) + ", resource context=" + std::to_string(resourceContext));
 		}
 		virtual void ClientCertificateRequestedEvent(std::vector<ClientCertificate> client_certificates, wil::com_ptr<ICoreWebView2Deferral> deferral) override
 		{
@@ -605,9 +632,9 @@ namespace WebView2
 			}
 
 			CRect bounds;
-			GetClientRect(m_hwnd , &bounds);
+			GetClientRect(m_hwnd, &bounds);
 
-			RETURN_IF_FAILED(m_controller->put_IsVisible(true));		
+			RETURN_IF_FAILED(m_controller->put_IsVisible(true));
 			RETURN_IF_FAILED(m_webView->Navigate(m_url.c_str()));
 			(static_cast<T*>(this))->put_bounds(bounds);
 
@@ -619,7 +646,7 @@ namespace WebView2
 		/// </summary>
 		/// <param name="log">Indicates if logging is enabled.</param>
 		/// <returns>The result of the initialization.</returns>
-		HRESULT InitializeWebView(bool log=false)
+		HRESULT InitializeWebView(bool log = false)
 		{
 			LOG_TRACE(std::string(__FUNCTION__) + " Using browser directory:" + WideToNarrow(m_browser_directory));
 			auto options = Microsoft::WRL::Make<CoreWebView2EnvironmentOptions>();
@@ -640,11 +667,11 @@ namespace WebView2
 			if (log == true)
 			{
 				fs::path unique_file;
-				if (!Utility::GetUniqueLogFileName(unique_file))
+				if (!WebView2::Utilities::Utility::GetUniqueLogFileName(unique_file))
 				{
 					//LOG_DEBUG(std::string("Create unique log file for log-net-log filename: ") + unique_file.string());
 					auto log = L"--log-net-log=" + unique_file.native();
-					argbrowser += L" " + log;					
+					argbrowser += L" " + log;
 				}
 				else
 				{
@@ -658,7 +685,7 @@ namespace WebView2
 			}
 
 			auto webViewEnvironment = SingleWebView2::get().get_webViewEnvironment();
-			
+
 
 			if (webViewEnvironment == nullptr)
 			{
@@ -722,7 +749,7 @@ namespace WebView2
 			}
 			return hr;
 		}
-	
 
-};
-}
+
+	}; // class WebView2Impl2
+}; // namespace WebView2::Core

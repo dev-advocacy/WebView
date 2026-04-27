@@ -1,5 +1,7 @@
 #pragma once
 
+namespace Messaging
+{
 
 class CRegisteredMessages
 {
@@ -23,3 +25,5 @@ private:
     static inline UINT s_runAsyncCallback = 0;
     static inline UINT s_runFunctor = 0;
 };
+
+} // namespace Messaging

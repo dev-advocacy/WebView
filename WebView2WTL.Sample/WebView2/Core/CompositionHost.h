@@ -1,10 +1,11 @@
 #pragma once
-#include "pch.h"
-#include "logger.h"
+#include <WebView2.h>
+#include <dcomp.h>
+#include "../Logger/logger.h"
 #include <sstream>
 
 
-namespace WebView2
+namespace WebView2::Core
 {
 	template <class T>
 	class CCompositionHost
@@ -287,14 +288,14 @@ namespace WebView2
 		}
 		void TrackMouseEvents(DWORD mouseTrackingFlags)
 		{
-			T* pT = static_cast<T*>(this);
+					T* pT = static_cast<T*>(this);
 
-			TRACKMOUSEEVENT tme;
-			tme.cbSize = sizeof(tme);
-			tme.dwFlags = mouseTrackingFlags;
-			tme.hwndTrack = pT->m_hWnd;
-			tme.dwHoverTime = 0;
-			::TrackMouseEvent(&tme);
-		}
-	};
-}
+					TRACKMOUSEEVENT tme;
+					tme.cbSize = sizeof(tme);
+					tme.dwFlags = mouseTrackingFlags;
+					tme.hwndTrack = pT->m_hWnd;
+					tme.dwHoverTime = 0;
+					::TrackMouseEvent(&tme);
+				}
+				};
+			} // namespace WebView2::Core

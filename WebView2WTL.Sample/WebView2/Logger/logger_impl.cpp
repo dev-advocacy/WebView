@@ -1,24 +1,25 @@
 // logger_impl.cpp - Simple local logging implementation (NO PCH)
 // This file intentionally does not include OpenTelemetry headers.
 
+#include "pch.h"
 #include "logger.h"
 
-// Defensive: WTL/ATL macro collisions
-#ifdef L
-#undef L
-#endif
-#ifdef R
-#undef R
-#endif
-
-#include <chrono>
-#include <ctime>
-
-// telemetry
-#include <memory>
-#include <opentelemetry/logs/provider.h>
-#include <opentelemetry/sdk/logs/logger_provider.h>
-#include <opentelemetry/sdk/logs/simple_log_record_processor.h>
+//// Defensive: WTL/ATL macro collisions
+//#ifdef L
+//#undef L
+//#endif
+//#ifdef R
+//#undef R
+//#endif
+//
+//#include <chrono>
+//#include <ctime>
+//
+//// telemetry
+//#include <memory>
+//#include <opentelemetry/logs/provider.h>
+//#include <opentelemetry/sdk/logs/logger_provider.h>
+//#include <opentelemetry/sdk/logs/simple_log_record_processor.h>
 
 namespace logs_api = opentelemetry::logs;
 

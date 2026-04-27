@@ -1,10 +1,19 @@
 #pragma once
 
+#include <string>
+#include <string_view>
+#include <list>
+#include <system_error>
+#include <filesystem>
+#include <WebView2.h>
 
 #include "EdgeInfomation.h"
 
-namespace WebView2
+namespace WebView2::Utilities
 {
+	// Namespace alias for filesystem
+	namespace fs = std::filesystem;
+
 	class Utility
 	{
 	public:
@@ -25,7 +34,7 @@ namespace WebView2
 
 	private:
 		static std::wstring GetProgramFilesx86Directory();
-		static std::wstring GetLangStringFromLangId(DWORD dwLangID_i, bool returnShortCode);		
+		static std::wstring GetLangStringFromLangId(DWORD dwLangID_i, bool returnShortCode);
 		static EdgeInfomation GetVersionFromRegistry(HKEY key, std::wstring key_entry);
-	};
-};
+	}; // class Utility
+} // namespace WebView2::Utilities

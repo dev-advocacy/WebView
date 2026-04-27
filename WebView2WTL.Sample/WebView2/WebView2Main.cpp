@@ -27,7 +27,7 @@ public:
 
 		HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
-		if (!CRegisteredMessages::Initialize())
+		if (!Messaging::CRegisteredMessages::Initialize())
 		{
 			::MessageBoxW(nullptr, L"Failed to register custom window messages.", L"Error", MB_OK | MB_ICONERROR);
 			return -1;

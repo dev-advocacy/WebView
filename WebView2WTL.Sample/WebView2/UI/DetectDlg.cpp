@@ -16,7 +16,7 @@ LRESULT CDetectDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	}
 	CComboBox* pComPortSelection = reinterpret_cast<CComboBox*>(&p);
 	
-	m_edge_versions = WebView2::Utility::EnumEdgeVersion();
+	m_edge_versions = WebView2::Utilities::Utility::EnumEdgeVersion();
 
 	for (auto it = m_edge_versions.begin(); it != m_edge_versions.end(); ++it)
 	{

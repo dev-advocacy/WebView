@@ -98,8 +98,8 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 		LOG_TRACE(std::string("Using WebView2 version=") + WideToNarrow(webView2Version));
 		LOG_TRACE(std::string("Using WebView2 channel=") + WideToNarrow(webView2Channel));
 	}
-	profile.browserDirectory = WebView2::Utility::GetBrowserDirectory(webView2Version, webView2Channel, webViewFolder);
-	profile.userDataDirectory = WebView2::Utility::GetUserDataDirectory(webView2Channel);
+	profile.browserDirectory = WebView2::Utilities::Utility::GetBrowserDirectory(webView2Version, webView2Channel, webViewFolder);
+	profile.userDataDirectory = WebView2::Utilities::Utility::GetUserDataDirectory(webView2Channel);
 	profile.channel = webView2Channel.empty() ? L"stable release" : webView2Channel;	
 	profile.version = webView2Version;
 	profile.isTest = isTest;

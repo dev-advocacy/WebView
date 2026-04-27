@@ -27,37 +27,21 @@
 #include <atlctrls.h>
 #include <atldlgs.h>
 #include <atlctrlw.h>
-#include <atlframe.h>
 #include <atlsplit.h>
 #include <atlmisc.h>
-#include <atlctrls.h>
-#include <atlctrlw.h>
 #include <atlctrlx.h>
 #include <atlcrack.h>
 #include <atlddx.h>
 #include <atlimage.h>
 #include <atlwin.h>
-#include <atlframe.h>
-#include <atlctrls.h>
-#include <atldlgs.h>
-#include <atlwin.h>
 
 extern CAppModule _Module;
 
-#include <wil/com.h>
-#include <wil/resource.h>
-#include <wil/result.h>
-#include <wrl.h>
-
-// WebView
-#include <WebView2.h>
-#include <WebView2EnvironmentOptions.h>
-
 //json
 #include <cpprest/json.h>
-
-
-//Windows
+//
+//
+////Windows
 #include <ppl.h>
 #include <concurrent_unordered_map.h>
 #include <d2d1_3.h>
@@ -71,12 +55,7 @@ extern CAppModule _Module;
 #include <winrt/Windows.UI.Composition.h>
 #include <winrt/Windows.UI.ViewManagement.h>
 
-
-
-
-
 //namespaces
-
 namespace	fs = std::filesystem;
 
 
@@ -92,12 +71,24 @@ inline constexpr int ERR_WEBVIEW_NOT_INSTALLED = -1024;
 inline constexpr int ERR_RESOURCE_NOT_FOUND = -1025;
 
 
-enum ColorMode
-{
-  Dark,
-  Light,
-  none
-};
+
+
+#include <wil/com.h>
+#include <wil/resource.h>
+#include <wil/result.h>
+#include <wrl.h>
+
+// MUST undef U before OpenTelemetry:
+// cpprest defines U(x) as L##x — this corrupts template parameter 'U'
+// inside opentelemetry/nostd/span.h, turning U(*)[] into L(*)[]
+#ifdef U
+#undef U
+#endif
+
+#include <opentelemetry/logs/provider.h>
+#include <opentelemetry/sdk/logs/logger_provider.h>
+#include <opentelemetry/sdk/logs/simple_log_record_processor.h>
+
 
 #if defined _M_IX86
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")

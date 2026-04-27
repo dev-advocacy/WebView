@@ -1,8 +1,8 @@
 #pragma once
 #include "pch.h"
-#include "Utility.h"
+#include "../Utilities/Utility.h"
 #include "Wininet.h"
-#include "logger.h"
+#include "../Logger/logger.h"
 
 //				RETURN_IF_FAILED_MSG(ERROR_INVALID_PARAMETER, "message = %ls, hr = %d", A2W(std::system_category().message(ERROR_INVALID_PARAMETER).data()), ERROR_INVALID_PARAMETER);
 

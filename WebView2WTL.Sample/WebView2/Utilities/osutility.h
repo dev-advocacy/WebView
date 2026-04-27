@@ -1,5 +1,12 @@
 #pragma once
-// Returns Program Files directory x86.
+#include <WebView2.h>
+
+enum ColorMode
+{
+    Dark,
+    Light,
+    none
+};
 
 namespace os
 {

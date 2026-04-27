@@ -1,10 +1,10 @@
 #pragma once
 
-#include "LogView.h"
-#include "ImageListBox.h"
-#include "osutility.h"
+#include "../UI/LogView.h"
+#include "../UI/ImageListBox.h"
+#include "../Utilities/osutility.h"
 #include "resource.h"
-#include "ColoredControls.h"
+#include "../UI/ColoredControls.h"
 
 class CCertificateDlg : public CDialogImpl<CCertificateDlg>,
 						public CWinDataExchange<CCertificateDlg>

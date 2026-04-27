@@ -1,14 +1,24 @@
 #pragma once
-#include "Utility.h"
-#include "ClientCertificate.h"
-#include "CertificateDlg.h"
-#include "logger.h"
-#include "RegisterMessages.h"
-
+#include <WebView2.h>
+#include <wil/com.h>
+#include <wil/result.h>
+#include <string>
+#include <string_view>
+#include <vector>
+#include <memory>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
 #include <locale>
 #include <codecvt>
 
-namespace WebView2
+#include "../Utilities/Utility.h"
+#include "../Security/ClientCertificate.h"
+#include "../Security/CertificateDlg.h"
+#include "../Logger/logger.h"
+#include "../Messaging/RegisterMessages.h"
+
+namespace WebView2::Utilities
 {
 	// Base class of functors that must run on the UI thread.
 	class UIFunctorBase
@@ -28,7 +38,7 @@ namespace WebView2
 				_stopped = false;
 			}
 
-			::PostMessageW(wnd, CRegisteredMessages::RunFunctor(), reinterpret_cast<WPARAM>(this), 0);
+			::PostMessageW(wnd, Messaging::CRegisteredMessages::RunFunctor(), reinterpret_cast<WPARAM>(this), 0);
 
 			// Wait for the messaged to be processed on the UI thread.
 			std::unique_lock lock(_mutex);
@@ -209,10 +219,6 @@ namespace WebView2
 		{
 			LOG_TRACE(__FUNCTION__);
 		}
-
-
-		
-
 
 		/// <summary>
 		/// Raises the web resource response received event.
@@ -554,4 +560,4 @@ namespace WebView2
 			return S_OK;
 		}				
 	};
-}
+} // namespace WebView2::Utilities

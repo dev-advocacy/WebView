@@ -34,7 +34,7 @@ LRESULT CURLCombo::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bH
 				if (index != CB_ERR)
 				{
 					this->SetCurSel(index);
-					::SendMessageW(parentFrame_, CRegisteredMessages::NavigateCallback(), 0, LPARAM(text_url.c_str()));
+					::SendMessageW(parentFrame_, Messaging::CRegisteredMessages::NavigateCallback(), 0, LPARAM(text_url.c_str()));
 				}
 			}
 		}	
@@ -78,7 +78,7 @@ BOOL CURLCombo::PreTranslateMessage(MSG* pMsg)
 							item.pszText = (LPWSTR)text_url.c_str();
 							this->InsertItem(&item);
 						}
-						::SendMessageW(parentFrame_, CRegisteredMessages::NavigateCallback(), 0, LPARAM(text_url.c_str()));
+						::SendMessageW(parentFrame_, Messaging::CRegisteredMessages::NavigateCallback(), 0, LPARAM(text_url.c_str()));
 					}
 				}
 			}

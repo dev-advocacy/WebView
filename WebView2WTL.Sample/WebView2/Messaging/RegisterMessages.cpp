@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "RegisterMessages.h"
 
+namespace Messaging
+{
 
 std::wstring CRegisteredMessages::ProcessGuidString()
 {
@@ -56,3 +58,5 @@ UINT CRegisteredMessages::RunFunctor()
 {
     return s_runFunctor;
 }
+
+} // namespace Messaging

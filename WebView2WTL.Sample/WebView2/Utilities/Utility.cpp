@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 
 
 
-namespace WebView2
+namespace WebView2::Utilities
 {
     // Use for case-insensitive wstring keys in std::map.
     struct WStringIgnoreCaseLess

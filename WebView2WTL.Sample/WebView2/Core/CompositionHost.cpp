@@ -1,9 +1,9 @@
-#include "pch.h"
+#include "../pch.h"
 #include "CheckFailure.h"
 #include "WebBrowserDlg.h"
 #include "CompositionHost.h"
 
-namespace WebView2
+namespace WebView2::Core
 {
     using namespace winrt;
     using namespace winrt::Windows::System;
@@ -225,4 +225,4 @@ namespace WebView2
 ////        }
 ////        SetWebViewVisualBounds();
 ////    }
-}
+} // namespace WebView2::Core

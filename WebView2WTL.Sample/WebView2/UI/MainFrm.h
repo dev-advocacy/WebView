@@ -5,7 +5,7 @@
 #pragma once
 
 
-#include "WebView2.h"
+#include "WebView2Wnd.h"
 #include "WebViewProfile.h"
 #include "WebViewDlg.h"
 #include "WebView2Impl2.h"
@@ -18,7 +18,7 @@ public:
 	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
 
 	CCommandBarCtrl						m_CmdBar;
-	std::unique_ptr <CWebView2>			m_webview2 = nullptr;	
+	std::unique_ptr <WebView2::Core::CWebView2>		m_webview2 = nullptr;	
 	std::unique_ptr<CDlgWebView2>		m_dlgWebWiew2Modeless = nullptr;	
 	ProfileInformation_t				m_webviewprofile;
 	CURLCombo							m_wndCombo;
@@ -53,7 +53,7 @@ public:
 		COMMAND_ID_HANDLER(ID_SCENARIO_DETECT, OnScenarioDetect)
 		COMMAND_ID_HANDLER(ID_WEBVIEW_SHOWDEVTOOLS, OnScenarioWebViewShowDevTools)
 
-		if (uMsg == CRegisteredMessages::NavigateCallback())
+		if (uMsg == Messaging::CRegisteredMessages::NavigateCallback())
 		{
 			bHandled = TRUE;
 			lResult = OnNavigate(uMsg, wParam, lParam, bHandled);
