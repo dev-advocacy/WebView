@@ -1,0 +1,58 @@
+﻿{
+  "name": "webview2httpclient",
+  "version-string": "1.0.0",
+  "description": "WebView2HttpClient DLL -- HTTP client with WinHTTP/WinINet/CppRest backends, Polly-style resilience, OTel telemetry",
+  "homepage": "",
+  "dependencies": [
+    {
+      "name": "opentelemetry-cpp",
+      "features": ["otlp-http"],
+      "platform": "!uwp"
+    },
+    {
+      "name": "boost-asio",
+      "platform": "linux"
+    },
+    {
+      "name": "boost-system",
+      "platform": "linux"
+    },
+    {
+      "name": "boost-thread",
+      "platform": "linux"
+    },
+    {
+      "name": "boost-filesystem",
+      "platform": "linux"
+    },
+    {
+      "name": "boost-chrono",
+      "platform": "linux"
+    },
+    {
+      "name": "boost-random",
+      "platform": "linux"
+    },
+    {
+      "name": "boost-date-time",
+      "platform": "linux"
+    },
+    {
+      "name": "boost-regex",
+      "platform": "linux"
+    },
+    {
+      "name": "openssl",
+      "platform": "linux"
+    },
+    {
+      "name": "zlib"
+    }
+  ],
+  "features": {
+    "tests": {
+      "description": "Build benchmark and test utilities",
+      "dependencies": []
+    }
+  }
+}
