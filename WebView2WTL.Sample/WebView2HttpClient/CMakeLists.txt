@@ -13,39 +13,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # No vcpkg dependency on cpprestsdk: we consume the fork directly.
 # The fork's CMakeLists produces the 'cpprest' target.
 # -------------------------------------------------------------------------
-set(CPPREST_ROOT ${CMAKE_SOURCE_DIR}/../../third_party/cpprestsdk/Release)
-if(NOT EXISTS ${CPPREST_ROOT}/CMakeLists.txt)
-  message(FATAL_ERROR
-    "cpprestsdk submodule not found at ${CPPREST_ROOT}.
-"
-    "Run: git submodule update --init --recursive")
-endif()
-
-# Disable tests and samples from the fork when building as a subdirectory
-set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-set(CPPREST_EXCLUDE_BROTLI ON CACHE BOOL "" FORCE)
-
-add_subdirectory(${CPPREST_ROOT} cpprestsdk_build EXCLUDE_FROM_ALL)
-
-# -------------------------------------------------------------------------
-# OpenTelemetry -- Traces + Metrics + Logs (via vcpkg)
-# -------------------------------------------------------------------------
-find_package(opentelemetry-cpp CONFIG REQUIRED COMPONENTS
-  trace
-  metrics
-  logs
-  otlp_http_exporter
-)
-
-# -------------------------------------------------------------------------
-# Platform-specific backend libraries
-# -------------------------------------------------------------------------
 if(WIN32)
-  # WinHTTP and WinINet are native -- no vcpkg needed
   set(PLATFORM_LIBS winhttp wininet)
+  # cpprestsdk submodule path
+  set(CPPREST_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/cpprestsdk/Release)
+  if(NOT EXISTS ${CPPREST_ROOT}/CMakeLists.txt)
+    message(FATAL_ERROR "cpprestsdk submodule not found. Run: git submodule update --init --recursive")
+  endif()
+  set(BUILD_TESTS   OFF CACHE BOOL "" FORCE)
+  set(BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+  set(CPPREST_EXCLUDE_BROTLI ON CACHE BOOL "" FORCE)
+  add_subdirectory(${CPPREST_ROOT} cpprestsdk_build EXCLUDE_FROM_ALL)
 else()
-  set(PLATFORM_LIBS "")
+  message(FATAL_ERROR "WebView2HttpClient supports Windows only.")
 endif()
 
 # -------------------------------------------------------------------------
@@ -79,7 +59,7 @@ set(HTTPCLIENT_SOURCES
 
   # Performance benchmark (WinHTTP vs WinINet vs CppRest)
   Benchmark/HttpBenchmark.cpp
-)
+))
 
 # -------------------------------------------------------------------------
 # Shared library (DLL on Windows, .so on Linux)
@@ -100,18 +80,21 @@ target_include_directories(WebView2HttpClient
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Resilience>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Telemetry>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Benchmark>
-    # Cookie.h from WebView2 project
+    # WebView2::Cookie model
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../WebView2/Security>
 )
 
+# OpenTelemetry (via vcpkg)
+find_package(opentelemetry-cpp CONFIG REQUIRED)
+
 target_link_libraries(WebView2HttpClient
   PRIVATE
-    cpprest                                      # from stripped fork
+    cpprest
     opentelemetry-cpp::trace
     opentelemetry-cpp::metrics
     opentelemetry-cpp::logs
     opentelemetry-cpp::otlp_http_exporter
-    ${PLATFORM_LIBS}                            # winhttp + wininet on Windows
+    ${PLATFORM_LIBS}
 )
 
 # -------------------------------------------------------------------------
