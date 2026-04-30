@@ -58,14 +58,6 @@ extern CAppModule _Module;
 //namespaces
 namespace	fs = std::filesystem;
 
-
-// custom messages
-inline constexpr UINT MSG_NAVIGATE = WM_APP + 123;
-inline constexpr UINT MSG_RUN_ASYNC_CALLBACK = WM_APP + 124;
-inline constexpr UINT MSG_NAVIGATE_CALLBACK = WM_APP + 125;
-inline constexpr UINT MSG_GETCOOKIES_CALLBACK = WM_APP + 126;
-inline constexpr UINT MSG_CALLBACK = WM_APP + 127;
-inline constexpr UINT WM_RUN_FUNCTOR = WM_APP + 128;
 inline constexpr int TEXT_SIZE = 1024;
 inline constexpr int ERR_WEBVIEW_NOT_INSTALLED = -1024;
 inline constexpr int ERR_RESOURCE_NOT_FOUND = -1025;

@@ -131,9 +131,6 @@
     <ClInclude Include="CheckFailure.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Core\WebView2.h">
-      <Filter>Header Files\Core</Filter>
-    </ClInclude>
     <ClInclude Include="Utilities\Utility.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>

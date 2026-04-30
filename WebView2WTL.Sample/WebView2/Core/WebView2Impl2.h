@@ -4,20 +4,6 @@
 
 #include <WebView2.h>
 #include <WebView2EnvironmentOptions.h>
-//#include <wil/com.h>
-//#include <wil/result.h>
-//#include <wrl.h>
-//#include <atlbase.h>
-//#include <atlwin.h>
-//#include <string>
-//#include <memory>
-//#include <vector>
-//#include <list>
-//#include <future>
-//#include <mutex>
-//#include <format>
-//#include <filesystem>
-//#include <cpprest/json.h>
 
 #include "../Resources/resource.h"
 #include "../Utilities/headersprop.h"
@@ -38,7 +24,6 @@ namespace WebView2::Core
 
 	// Don't use namespace-scope using for types - causes circular dependencies
 	// Types will be qualified where used
-
 	// Add this struct at the top or in a suitable header
 
 	class ContextData
@@ -653,6 +638,8 @@ namespace WebView2::Core
 			HRESULT hr = S_OK;
 			std::wstring argbrowser;
 
+			argbrowser = L"--edge-webview-unique-window-class";
+
 
 			// enable single sign on with Azure Entra ID
 			hr = options->put_AllowSingleSignOnUsingOSPrimaryAccount(TRUE);
@@ -661,21 +648,21 @@ namespace WebView2::Core
 			if (m_is_test == true)
 			{
 				m_port = m_port.empty() ? L"9222" : m_port;
-				//LOG_DEBUG(std::string("Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=") + WideToNarrow(m_port));
-				argbrowser = L"--remote-debugging-port=" + m_port;
+				LOG_DEBUG(std::string("Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=") + WideToNarrow(m_port));
+				argbrowser += L"--remote-debugging-port=" + m_port;
 			}
 			if (log == true)
 			{
 				fs::path unique_file;
 				if (!WebView2::Utilities::Utility::GetUniqueLogFileName(unique_file))
 				{
-					//LOG_DEBUG(std::string("Create unique log file for log-net-log filename: ") + unique_file.string());
+					LOG_DEBUG(std::string("Create unique log file for log-net-log filename: ") + unique_file.string());
 					auto log = L"--log-net-log=" + unique_file.native();
 					argbrowser += L" " + log;
 				}
 				else
 				{
-					//LOG_ERROR("Failed to create unique log file name for log-net-log");
+					LOG_ERROR("Failed to create unique log file name for log-net-log");
 				}
 			}
 			if (!argbrowser.empty())

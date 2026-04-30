@@ -292,7 +292,6 @@
     <ClInclude Include="Resources\resource.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="UI\WebRequestDlg.h" />
-    <ClInclude Include="Core\WebView2.h" />
     <ClInclude Include="Core\WebView2Impl2.h" />
     <ClInclude Include="Security\WebViewAuthentication.h" />
     <ClInclude Include="Core\WebViewDlg.h" />

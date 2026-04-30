@@ -31,7 +31,7 @@ void Thread::Begin()
     d_threadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)StaticThreadProc, this, 0, (LPDWORD)&d_threadID);
     if (d_threadHandle == NULL)
     {
-        // Arrooga! Dive, dive!  And deal with the error, too!
+        
     }
     d_bIsRunning = true;
 #endif
