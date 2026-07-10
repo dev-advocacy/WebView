@@ -177,8 +177,7 @@ namespace webview::net
 		/// An empty `clientCertSubjectFilter` triggers the native InternetErrorDlg.
 		std::string Download(const std::wstring& url,
 							 const std::wstring& clientCertSubjectFilter,
-							 SelectedCertInfo*   outCertInfo = nullptr,
-							 HWND                hwndParent  = nullptr)
+							 SelectedCertInfo*   outCertInfo = nullptr)
 		{
 			URL_COMPONENTS comp{};
 			std::wstring   host(256, L'\0');
@@ -202,7 +201,7 @@ namespace webview::net
 			const auto request     = OpenRequest(connection.get(), path);
 
 			UniqueCertContext selectedCert = SendRequestWithCertAuth(
-				request.get(), clientCertSubjectFilter, host, comp.nPort, hwndParent);
+				request.get(), clientCertSubjectFilter, host, comp.nPort);
 
 			// Populate outCertInfo if provided and a certificate was selected
 			if (outCertInfo && selectedCert)
@@ -261,8 +260,7 @@ namespace webview::net
 			HINTERNET            request,
 			const std::wstring&  clientCertSubjectFilter,
 			const std::wstring&  host,
-			INTERNET_PORT        port,
-			HWND                 hwndParent)
+			INTERNET_PORT        port)
 		{
 			UniqueCertContext usedCert;
 
@@ -282,11 +280,9 @@ namespace webview::net
 
 				if (clientCertSubjectFilter.empty())
 				{
-					// Native WinInet dialog — use hwndParent if valid
-					HWND owner = (hwndParent && ::IsWindow(hwndParent)) ? hwndParent : ::GetDesktopWindow();
 					LPVOID data = nullptr;
 					const DWORD dlgResult = InternetErrorDlg(
-						owner,
+						GetDesktopWindow(),
 						request,
 						ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED,
 						FLAGS_ERROR_UI_FLAGS_GENERATE_DATA | FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS,
@@ -421,7 +417,6 @@ namespace webview::net
 
 			return body;
 		}
-
 		// -------------------------------------------------------------------
 		// Returns true if a pre-selected certificate matches the given host:port
 		// -------------------------------------------------------------------

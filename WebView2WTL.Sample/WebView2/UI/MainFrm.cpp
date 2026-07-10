@@ -84,9 +84,11 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		auto& preSel = webview::net::WinInetCertPreSelector::Instance();
 		if (preSel.IsEnabled() && !m_webviewprofile.initialUrl.empty())
 		{
+			LOG_TRACE(std::string("WinInet pre-selection: Run() starting for url=") + WideToNarrow(m_webviewprofile.initialUrl));
 			try
 			{
-				preSel.Run(m_webviewprofile.initialUrl, L"", m_hWnd);
+				preSel.Run(m_webviewprofile.initialUrl, L"");
+				LOG_TRACE(std::string("WinInet pre-selection: Run() completed, cert subject=") + WideToNarrow(preSel.GetSubject()));
 			}
 			catch (const std::exception&)
 			{
@@ -400,7 +402,7 @@ LRESULT CMainFrame::OnScenarioWininetPreCert(WORD /*wNotifyCode*/, WORD /*wID*/,
 
 			try
 			{
-				preSel.Run(url, L"", m_hWnd);
+				preSel.Run(url, L"");
 			}
 			catch (const std::exception& ex)
 			{
