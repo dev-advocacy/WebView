@@ -458,7 +458,7 @@ namespace WebView2::Utilities
 								host_name += std::to_wstring(port);
 
 								CCertificateDlg dlg(m_clientCertificates, host_name, m_hwnd_parent);
-								if (dlg.DoModal() == IDOK)
+										if (dlg.DoModal() == IDOK)
 								{
 									if (dlg.get_selectedItem() >= 0)
 									{

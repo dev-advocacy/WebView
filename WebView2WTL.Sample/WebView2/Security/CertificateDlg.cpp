@@ -79,10 +79,21 @@ LRESULT CCertificateDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 	if (m_client_certificates.size() > 0)
 		m_List_certificate.SelectString(0, m_client_certificates[0].DisplayName.get());
 
-	SetWindowPos(this->m_hwnd_parent, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);	
+	if (::IsWindow(m_hwnd_parent))
+	{
+		::SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		CenterWindow(m_hwnd_parent);
+		::SetForegroundWindow(m_hWnd);
+		::BringWindowToTop(m_hWnd);
+		::SetWindowPos(m_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	}
+	else
+	{
+		CenterWindow();
+	}
 
-	CenterWindow(GetParent());
-	
 	// load ddx values
 	DoDataExchange(TRUE);
 

@@ -18,10 +18,10 @@
     },
     {
       "name": "opentelemetry-cpp",
-      "features": ["otlp-http"],
+      "features": [ "otlp-http" ],
       "platform": "windows"
     }
   ],
   "overrides": [],
-  "builtin-baseline": ""
+  "builtin-baseline": "97b19caab97ab0c8d36c93230046c8c45fcd41d0"
 }
