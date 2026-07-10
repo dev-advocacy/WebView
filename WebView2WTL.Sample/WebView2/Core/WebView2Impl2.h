@@ -89,6 +89,22 @@ namespace WebView2::Core
 		}
 
 		/// <summary>
+		/// Toggle custom certificate selection dialog.
+		/// When false (default), WebView2 shows its native certificate UI.
+		/// When true, the application shows CCertificateDlg.
+		/// </summary>
+		void set_use_custom_cert_dlg(bool use)
+		{
+			if (m_webview2_events)
+				m_webview2_events->set_use_custom_cert_dlg(use);
+		}
+
+		bool get_use_custom_cert_dlg() const
+		{
+			return m_webview2_events ? m_webview2_events->get_use_custom_cert_dlg() : false;
+		}
+
+		/// <summary>
 		/// Sets the parent window handle.
 		/// </summary>
 		/// <param name="hwnd">The handle to the parent window.</param>

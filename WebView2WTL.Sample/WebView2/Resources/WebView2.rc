@@ -115,6 +115,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Installation",                ID_SCENARIO_INSTALLATION
         MENUITEM "Detect",                      ID_SCENARIO_DETECT
+        MENUITEM SEPARATOR
+        MENUITEM "Use Custom Certificate Dialog", ID_SCENARIO_CERTIFICATE_CUSTOM_DLG
         POPUP "Cookies"
         BEGIN
             POPUP "WebView"

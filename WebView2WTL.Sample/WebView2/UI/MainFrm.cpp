@@ -341,3 +341,14 @@ LRESULT CMainFrame::OnScenarioWebViewShowDevTools(WORD /*wNotifyCode*/, WORD /*w
 	m_webview2->showdevtools();
 	return S_OK;
 }
+
+LRESULT CMainFrame::OnScenarioCertificateCustomDlg(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	bool next = !m_webview2->get_use_custom_cert_dlg();
+	m_webview2->set_use_custom_cert_dlg(next);
+
+	// Mise à jour du checkmark via le mécanisme WTL CUpdateUI
+	UISetCheck(ID_SCENARIO_CERTIFICATE_CUSTOM_DLG, next ? 1 : 0);
+	UIUpdateMenuBar();
+	return S_OK;
+}

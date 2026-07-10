@@ -126,8 +126,11 @@ namespace WebView2::Utilities
 		EventRegistrationToken                  m_navigationCompletedToken = {};
 
 		std::vector<ClientCertificate>			m_clientCertificates;
-		HWND									m_hwnd_parent = nullptr;	
+		HWND									m_hwnd_parent = nullptr;
+		bool									m_use_custom_cert_dlg = false;
 	public:
+		void set_use_custom_cert_dlg(bool use) { m_use_custom_cert_dlg = use; }
+		bool get_use_custom_cert_dlg() const    { return m_use_custom_cert_dlg; }
 		webview2_events()
 		{
 		}
@@ -457,14 +460,22 @@ namespace WebView2::Utilities
 								host_name += L":";
 								host_name += std::to_wstring(port);
 
-								CCertificateDlg dlg(m_clientCertificates, host_name, m_hwnd_parent);
-										if (dlg.DoModal() == IDOK)
+								if (m_use_custom_cert_dlg)
 								{
-									if (dlg.get_selectedItem() >= 0)
+									// Boîte de dialogue custom
+									CCertificateDlg dlg(m_clientCertificates, host_name, m_hwnd_parent);
+									if (dlg.DoModal() == IDOK)
 									{
-										RETURN_IF_FAILED(certificateCollection->GetValueAtIndex(dlg.get_selectedItem(), &certificate));
-										RETURN_IF_FAILED(args->put_SelectedCertificate(certificate.get()));
-										args->put_Handled(TRUE);
+										if (dlg.get_selectedItem() >= 0)
+										{
+											RETURN_IF_FAILED(certificateCollection->GetValueAtIndex(dlg.get_selectedItem(), &certificate));
+											RETURN_IF_FAILED(args->put_SelectedCertificate(certificate.get()));
+											args->put_Handled(TRUE);
+										}
+										else
+										{
+											args->put_Handled(TRUE);
+										}
 									}
 									else
 									{
@@ -473,7 +484,8 @@ namespace WebView2::Utilities
 								}
 								else
 								{
-									args->put_Handled(TRUE);
+									// Boîte de dialogue native WebView2 (comportement par défaut)
+									// On ne met pas Handled=TRUE => WebView2 affiche sa propre UI
 								}
 							}
 							return (S_OK);

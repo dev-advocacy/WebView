@@ -30,6 +30,7 @@ public:
 	BEGIN_UPDATE_UI_MAP(CMainFrame)
 		UPDATE_ELEMENT(ID_VIEW_TOOLBAR, UPDUI_MENUPOPUP)
 		UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
+		UPDATE_ELEMENT(ID_SCENARIO_CERTIFICATE_CUSTOM_DLG, UPDUI_MENUPOPUP)
 	END_UPDATE_UI_MAP()
 
 	BEGIN_MSG_MAP(CMainFrame)
@@ -52,6 +53,7 @@ public:
 		COMMAND_ID_HANDLER(ID_SCENARIO_INSTALLATION, OnScenarioInstallation)
 		COMMAND_ID_HANDLER(ID_SCENARIO_DETECT, OnScenarioDetect)
 		COMMAND_ID_HANDLER(ID_WEBVIEW_SHOWDEVTOOLS, OnScenarioWebViewShowDevTools)
+		COMMAND_ID_HANDLER(ID_SCENARIO_CERTIFICATE_CUSTOM_DLG, OnScenarioCertificateCustomDlg)
 
 		if (uMsg == Messaging::CRegisteredMessages::NavigateCallback())
 		{
@@ -92,7 +94,8 @@ public:
 
 	LRESULT OnScenarioWebViewDeleteAllCookies(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnScenarioWebViewShowDevTools(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	
+	LRESULT OnScenarioCertificateCustomDlg(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+
 private:
 	std::wstring _webview_version;
 	
