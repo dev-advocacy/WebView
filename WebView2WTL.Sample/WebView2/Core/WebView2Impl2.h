@@ -106,9 +106,9 @@ namespace WebView2::Core
 		}
 
 		/// <summary>
-		/// Active la fonctionnalité de pré-sélection certificat via WinInet.
-		/// Quand activée, le certificat choisi lors de Run() est injecté
-		/// automatiquement côté WebView pour le même host:port.
+		/// Enables the WinInet client certificate pre-selection feature.
+		/// When enabled, the certificate selected during Run() is automatically
+		/// injected on the WebView side for the matching host:port.
 		/// </summary>
 		void set_use_wininet_precert(bool use) noexcept
 		{

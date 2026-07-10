@@ -461,14 +461,14 @@ namespace WebView2::Utilities
 								host_name += L":";
 								host_name += std::to_wstring(port);
 
-								// --- Priorité 1 : injection WinInet pré-sélection ---
+								// --- Priority 1: WinInet pre-selected certificate injection ---
 								auto& preSel = webview::net::WinInetCertPreSelector::Instance();
 								if (preSel.IsEnabled() &&
 									preSel.HasMatchFor(host.get(),
 													  static_cast<INTERNET_PORT>(port)))
 								{
 									// Chercher dans la collection WebView2 le certificat
-									// dont le subject correspond au cert WinInet mémorisé
+									// whose subject matches the stored WinInet certificate
 									const std::wstring wantedSubject = preSel.GetSubject();
 									wil::com_ptr<ICoreWebView2ClientCertificate> matchedCert;
 
@@ -499,10 +499,10 @@ namespace WebView2::Utilities
 									// on tombe en fallback (custom dialog ou natif)
 								}
 
-								// --- Priorité 2 : boîte de dialogue custom ---
+								// --- Priority 2: custom certificate dialog ---
 								if (m_use_custom_cert_dlg)
 								{
-									// Boîte de dialogue custom
+									// Show custom certificate dialog
 									CCertificateDlg dlg(m_clientCertificates, host_name, m_hwnd_parent);
 									if (dlg.DoModal() == IDOK)
 									{
@@ -524,8 +524,8 @@ namespace WebView2::Utilities
 								}
 								else
 								{
-									// --- Priorité 3 : boîte de dialogue native WebView2 (défaut) ---
-									// Handled non positionné → WebView2 affiche sa propre UI
+									// --- Priority 3: native WebView2 dialog (default) ---
+									// Handled not set -> WebView2 shows its own certificate UI
 								}
 							}
 							return (S_OK);
