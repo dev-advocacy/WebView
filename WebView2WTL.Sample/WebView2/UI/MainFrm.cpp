@@ -86,7 +86,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		{
 			try
 			{
-				preSel.Run(m_webviewprofile.initialUrl, L"");
+				preSel.Run(m_webviewprofile.initialUrl, L"", m_hWnd);
 			}
 			catch (const std::exception&)
 			{
@@ -391,7 +391,7 @@ LRESULT CMainFrame::OnScenarioWininetPreCert(WORD /*wNotifyCode*/, WORD /*wID*/,
 
 			if (url.empty() || url == L"about:blank")
 			{
-				MessageBoxW(m_hWnd,
+				MessageBoxW(
 					L"Navigate to the target site first, then enable this option.",
 					L"WinInet Pre-Select Certificate",
 					MB_ICONINFORMATION | MB_OK);
@@ -400,12 +400,12 @@ LRESULT CMainFrame::OnScenarioWininetPreCert(WORD /*wNotifyCode*/, WORD /*wID*/,
 
 			try
 			{
-				preSel.Run(url, L"");
+				preSel.Run(url, L"", m_hWnd);
 			}
 			catch (const std::exception& ex)
 			{
 				const std::string msg = ex.what();
-				MessageBoxW(m_hWnd,
+				MessageBoxW(
 					std::wstring(msg.begin(), msg.end()).c_str(),
 					L"WinInet Pre-Select Certificate - Error",
 					MB_ICONERROR | MB_OK);
@@ -422,13 +422,12 @@ LRESULT CMainFrame::OnScenarioWininetPreCert(WORD /*wNotifyCode*/, WORD /*wID*/,
 				L"\nIssuer: "           + preSel.GetIssuer()  +
 				L"\n\nIt will be automatically injected in WebView for " +
 				preSel.GetHost();
-			MessageBoxW(m_hWnd, msg.c_str(),
+			MessageBoxW(msg.c_str(),
 				L"WinInet Pre-Select Certificate", MB_ICONINFORMATION | MB_OK);
 		}
 		else
 		{
-			MessageBoxW(m_hWnd,
-				L"No certificate captured (dialog cancelled or not required by the server).",
+			MessageBoxW(L"No certificate captured (dialog cancelled or not required by the server).",
 				L"WinInet Pre-Select Certificate",
 				MB_ICONWARNING | MB_OK);
 			return S_OK;

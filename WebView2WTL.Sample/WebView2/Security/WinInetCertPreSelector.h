@@ -177,7 +177,8 @@ namespace webview::net
 		/// An empty `clientCertSubjectFilter` triggers the native InternetErrorDlg.
 		std::string Download(const std::wstring& url,
 							 const std::wstring& clientCertSubjectFilter,
-							 SelectedCertInfo*   outCertInfo = nullptr)
+							 SelectedCertInfo*   outCertInfo = nullptr,
+							 HWND                hwndParent  = nullptr)
 		{
 			URL_COMPONENTS comp{};
 			std::wstring   host(256, L'\0');
@@ -201,7 +202,7 @@ namespace webview::net
 			const auto request     = OpenRequest(connection.get(), path);
 
 			UniqueCertContext selectedCert = SendRequestWithCertAuth(
-				request.get(), clientCertSubjectFilter, host, comp.nPort);
+				request.get(), clientCertSubjectFilter, host, comp.nPort, hwndParent);
 
 			// Populate outCertInfo if provided and a certificate was selected
 			if (outCertInfo && selectedCert)
@@ -260,14 +261,20 @@ namespace webview::net
 			HINTERNET            request,
 			const std::wstring&  clientCertSubjectFilter,
 			const std::wstring&  host,
-			INTERNET_PORT        port)
+			INTERNET_PORT        port,
+			HWND                 hwndParent)
 		{
 			UniqueCertContext usedCert;
 
 			for (int attempt = 0; attempt < 4; ++attempt)
 			{
 				if (HttpSendRequestW(request, nullptr, 0, nullptr, 0))
-					return usedCert; // success without cert or cert already set
+				{
+					// Request succeeded — try to read the client cert that was used
+					if (!usedCert)
+						usedCert = QueryClientCertFromRequest(request);
+					return usedCert;
+				}
 
 				const DWORD err = GetLastError();
 				if (err != ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED)
@@ -275,10 +282,11 @@ namespace webview::net
 
 				if (clientCertSubjectFilter.empty())
 				{
-					// Native WinInet dialog — selected certificate cannot be retrieved here
+					// Native WinInet dialog — use hwndParent if valid
+					HWND owner = (hwndParent && ::IsWindow(hwndParent)) ? hwndParent : ::GetDesktopWindow();
 					LPVOID data = nullptr;
 					const DWORD dlgResult = InternetErrorDlg(
-						GetDesktopWindow(),
+						owner,
 						request,
 						ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED,
 						FLAGS_ERROR_UI_FLAGS_GENERATE_DATA | FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS,
@@ -310,6 +318,35 @@ namespace webview::net
 
 			throw std::runtime_error(
 				"Server requires client certificate and request retry failed.");
+		}
+
+		/// After a successful HttpSendRequestW, reads the client certificate
+		/// that WinInet used for the session (set by InternetErrorDlg or app).
+		/// Returns nullptr if no cert was used.
+		static UniqueCertContext QueryClientCertFromRequest(HINTERNET request)
+		{
+			INTERNET_CERTIFICATE_INFO certInfo{};
+			DWORD size = sizeof(certInfo);
+			if (!InternetQueryOptionW(request,
+					INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
+					&certInfo, &size))
+				return {};
+
+			// Open MY store and find the cert matching the server cert subject
+			// (the client cert is the one set on the handle, not the server cert)
+			// WinInet does not expose the selected client cert directly.
+			// Instead, query INTERNET_OPTION_CLIENT_CERT_CONTEXT if supported.
+			PCCERT_CONTEXT ctx = nullptr;
+			DWORD ctxSize = sizeof(ctx);
+			if (InternetQueryOptionW(request,
+					INTERNET_OPTION_CLIENT_CERT_CONTEXT,
+					&ctx, &ctxSize) && ctx)
+			{
+				PCCERT_CONTEXT dup = CertDuplicateCertificateContext(ctx);
+				CertFreeCertificateContext(ctx);
+				return UniqueCertContext(dup);
+			}
+			return {};
 		}
 
 		static DWORD QueryStatusCode(HINTERNET request)
@@ -346,7 +383,7 @@ namespace webview::net
 	class WinInetCertPreSelector final
 	{
 	public:
-		// Singleton — magic static, thread-safe depuis C++11/C++20
+		// Singleton — magic static, thread-safe since C++11/C++20
 		static WinInetCertPreSelector& Instance() noexcept
 		{
 			static WinInetCertPreSelector s_instance;
@@ -451,3 +488,4 @@ namespace webview::net
 	};
 
 } // namespace webview::net
+
