@@ -117,6 +117,7 @@ BEGIN
         MENUITEM "Detect",                      ID_SCENARIO_DETECT
         MENUITEM SEPARATOR
         MENUITEM "Use Custom Certificate Dialog", ID_SCENARIO_CERTIFICATE_CUSTOM_DLG
+        MENUITEM "WinInet Pre-Select Certificate", ID_SCENARIO_WININET_PRECERT
         POPUP "Cookies"
         BEGIN
             POPUP "WebView"

@@ -267,6 +267,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Logger\logger.h" />
+    <ClInclude Include="Security\WinInetCertPreSelector.h" />
     <ClInclude Include="UI\AboutDlg.h" />
     <ClInclude Include="Utilities\CommandLineParser.h" />
     <ClInclude Include="UI\DomainDlg.h" />

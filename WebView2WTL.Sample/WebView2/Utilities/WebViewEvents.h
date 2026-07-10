@@ -15,6 +15,7 @@
 #include "../Utilities/Utility.h"
 #include "../Security/ClientCertificate.h"
 #include "../Security/CertificateDlg.h"
+#include "../Security/WinInetCertPreSelector.h"
 #include "../Logger/logger.h"
 #include "../Messaging/RegisterMessages.h"
 
@@ -460,6 +461,45 @@ namespace WebView2::Utilities
 								host_name += L":";
 								host_name += std::to_wstring(port);
 
+								// --- Priorité 1 : injection WinInet pré-sélection ---
+								auto& preSel = webview::net::WinInetCertPreSelector::Instance();
+								if (preSel.IsEnabled() &&
+									preSel.HasMatchFor(host.get(),
+													  static_cast<INTERNET_PORT>(port)))
+								{
+									// Chercher dans la collection WebView2 le certificat
+									// dont le subject correspond au cert WinInet mémorisé
+									const std::wstring wantedSubject = preSel.GetSubject();
+									wil::com_ptr<ICoreWebView2ClientCertificate> matchedCert;
+
+									for (UINT i = 0; i < certificateCollectionCount; ++i)
+									{
+										wil::com_ptr<ICoreWebView2ClientCertificate> candidate;
+										if (FAILED(certificateCollection->GetValueAtIndex(i, &candidate)))
+											continue;
+										wil::unique_cotaskmem_string subj;
+										if (SUCCEEDED(candidate->get_Subject(&subj)) &&
+											wantedSubject == subj.get())
+										{
+											matchedCert = candidate;
+											break;
+										}
+									}
+
+									if (matchedCert)
+									{
+										LOG_TRACE(std::string(__FUNCTION__)
+											+ " WinInet pre-selected cert injected for host: "
+											+ WideToNarrow(host.get()));
+										RETURN_IF_FAILED(args->put_SelectedCertificate(matchedCert.get()));
+										args->put_Handled(TRUE);
+										return S_OK;
+									}
+									// Cert WinInet introuvable dans la collection WebView2 —
+									// on tombe en fallback (custom dialog ou natif)
+								}
+
+								// --- Priorité 2 : boîte de dialogue custom ---
 								if (m_use_custom_cert_dlg)
 								{
 									// Boîte de dialogue custom
@@ -484,8 +524,8 @@ namespace WebView2::Utilities
 								}
 								else
 								{
-									// Boîte de dialogue native WebView2 (comportement par défaut)
-									// On ne met pas Handled=TRUE => WebView2 affiche sa propre UI
+									// --- Priorité 3 : boîte de dialogue native WebView2 (défaut) ---
+									// Handled non positionné → WebView2 affiche sa propre UI
 								}
 							}
 							return (S_OK);

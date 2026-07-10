@@ -11,6 +11,7 @@
 #include "WebRequestDlg.h"
 #include "DetectDlg.h"
 #include "DomainDlg.h"
+#include "../Security/WinInetCertPreSelector.h"
 
 #include "Utility.h"
 
@@ -84,6 +85,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	UIAddToolBar(hWndToolBar);
 	UISetCheck(ID_VIEW_TOOLBAR, 1);
 	UISetCheck(ID_VIEW_STATUS_BAR, 1);
+	UISetCheck(ID_SCENARIO_WININET_PRECERT, 1); // activé par défaut
 
 	// register object for message filtering and idle updates
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -349,6 +351,79 @@ LRESULT CMainFrame::OnScenarioCertificateCustomDlg(WORD /*wNotifyCode*/, WORD /*
 
 	// Mise à jour du checkmark via le mécanisme WTL CUpdateUI
 	UISetCheck(ID_SCENARIO_CERTIFICATE_CUSTOM_DLG, next ? 1 : 0);
+	UIUpdateMenuBar();
+	return S_OK;
+}
+
+LRESULT CMainFrame::OnScenarioWininetPreCert(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	auto& preSel = webview::net::WinInetCertPreSelector::Instance();
+	const bool next = !m_webview2->get_use_wininet_precert();
+
+	if (next)
+	{
+		// Activer : lancer la requête WinInet pré-WebView pour capturer le cert
+		// Récupérer l'URL courante depuis la barre d'adresse
+		CString currentUrl;
+		m_wndCombo.GetWindowText(currentUrl);
+		std::wstring url(currentUrl.GetString());
+
+		if (url.empty() || url == L"about:blank")
+		{
+			MessageBoxW(m_hWnd,
+				L"Naviguez d'abord vers le site cible, puis activez cette option.",
+				L"WinInet Pre-Select Certificate",
+				MB_ICONINFORMATION | MB_OK);
+			return S_OK;
+		}
+
+		try
+		{
+			// Exécuter la requête WinInet avec dialog natif (subject vide)
+			// L'utilisateur sélectionne son cert dans le dialog WinInet standard
+			preSel.Run(url, L"");
+
+			// Si un cert a été capturé
+			if (!preSel.GetSubject().empty())
+			{
+				m_webview2->set_use_wininet_precert(true);
+
+				std::wstring msg = L"Certificat mémorisé :\n"
+					+ preSel.GetSubject()
+					+ L"\nÉmetteur : "
+					+ preSel.GetIssuer()
+					+ L"\n\nIl sera injecté automatiquement côté WebView pour "
+					+ preSel.GetHost();
+				MessageBoxW(m_hWnd, msg.c_str(),
+					L"WinInet Pre-Select Certificate", MB_ICONINFORMATION | MB_OK);
+			}
+			else
+			{
+				MessageBoxW(m_hWnd,
+					L"Aucun certificat capturé (dialog annulé ou non requis par le serveur).",
+					L"WinInet Pre-Select Certificate",
+					MB_ICONWARNING | MB_OK);
+				return S_OK;
+			}
+		}
+		catch (const std::exception& ex)
+		{
+			const std::string msg = ex.what();
+			MessageBoxW(m_hWnd,
+				std::wstring(msg.begin(), msg.end()).c_str(),
+				L"WinInet Pre-Select Certificate — Erreur",
+				MB_ICONERROR | MB_OK);
+			return S_OK;
+		}
+	}
+	else
+	{
+		// Désactiver et effacer le cert mémorisé
+		m_webview2->set_use_wininet_precert(false);
+		preSel.Clear();
+	}
+
+	UISetCheck(ID_SCENARIO_WININET_PRECERT, next ? 1 : 0);
 	UIUpdateMenuBar();
 	return S_OK;
 }

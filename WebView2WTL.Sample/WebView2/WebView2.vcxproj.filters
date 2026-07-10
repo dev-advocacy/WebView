@@ -206,6 +206,9 @@
     <ClInclude Include="Logger\logger.h">
       <Filter>Header Files\Logger</Filter>
     </ClInclude>
+    <ClInclude Include="Security\WinInetCertPreSelector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\WebView2.rc">

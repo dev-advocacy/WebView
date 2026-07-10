@@ -12,6 +12,7 @@
 #include "CompositionHost.h"
 #include "../Utilities/WebViewEvents.h"
 #include "../Security/WebViewAuthentication.h"
+#include "../Security/WinInetCertPreSelector.h"
 #include "SingleWebView2.h"
 #include "../Messaging/RegisterMessages.h"
 #include "../Utilities/Utility.h"
@@ -102,6 +103,21 @@ namespace WebView2::Core
 		bool get_use_custom_cert_dlg() const
 		{
 			return m_webview2_events ? m_webview2_events->get_use_custom_cert_dlg() : false;
+		}
+
+		/// <summary>
+		/// Active la fonctionnalité de pré-sélection certificat via WinInet.
+		/// Quand activée, le certificat choisi lors de Run() est injecté
+		/// automatiquement côté WebView pour le même host:port.
+		/// </summary>
+		void set_use_wininet_precert(bool use) noexcept
+		{
+			webview::net::WinInetCertPreSelector::Instance().SetEnabled(use);
+		}
+
+		[[nodiscard]] bool get_use_wininet_precert() const noexcept
+		{
+			return webview::net::WinInetCertPreSelector::Instance().IsEnabled();
 		}
 
 		/// <summary>
