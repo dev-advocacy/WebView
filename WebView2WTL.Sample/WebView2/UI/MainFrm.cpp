@@ -79,23 +79,18 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	_webview_version = version;
 
 	// --- WinInet certificate pre-selection (runs BEFORE WebView2 is created) ---
-	// If the feature is enabled, issue a WinInet HTTPS request to the initial
-	// URL so the user can pick their client certificate via the native dialog.
-	// The selected certificate is stored in the singleton and automatically
-	// injected when WebView2 triggers ClientCertificateRequested for the same host.
+	// The target URL comes from --url or WEBVIEW2_INITIAL_URL (never hardcoded).
 	{
-		const std::wstring initialUrl = L"https://msdn.microsoft.com";
 		auto& preSel = webview::net::WinInetCertPreSelector::Instance();
-		if (preSel.IsEnabled())
+		if (preSel.IsEnabled() && !m_webviewprofile.initialUrl.empty())
 		{
 			try
 			{
-				preSel.Run(initialUrl, L"");
+				preSel.Run(m_webviewprofile.initialUrl, L"");
 			}
 			catch (const std::exception&)
 			{
 				// Non-fatal: server may not require a client certificate.
-				// WinInet pre-selection will remain inactive for this session.
 			}
 		}
 	}

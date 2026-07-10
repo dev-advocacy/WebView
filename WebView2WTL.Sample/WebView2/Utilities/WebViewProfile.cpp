@@ -12,12 +12,13 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 	LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
 		
 	CommandLineParser parser;
-	parser.AddOption("help", "produce help message");
+	parser.AddOption("help",    "produce help message");
 	parser.AddOption("version", "set WebView version (format: x.y.z.t)");
 	parser.AddOption("channel", "set WebView2 channel: beta, dev, canary, or fixed (empty for stable)");
-	parser.AddOption("test", "start the WebView2 in test mode");
-	parser.AddOption("port", "specify a communication port for the test");
-	parser.AddOption("root", "User-provided WebView2 root folder");
+	parser.AddOption("test",    "start the WebView2 in test mode");
+	parser.AddOption("port",    "specify a communication port for the test");
+	parser.AddOption("root",    "User-provided WebView2 root folder");
+	parser.AddOption("url",     "initial URL for WinInet client-cert pre-selection (overrides WEBVIEW2_INITIAL_URL env var)");
 
 	parser.Parse(argc, argv);
 
@@ -98,11 +99,31 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 		LOG_TRACE(std::string("Using WebView2 version=") + WideToNarrow(webView2Version));
 		LOG_TRACE(std::string("Using WebView2 channel=") + WideToNarrow(webView2Channel));
 	}
-	profile.browserDirectory = WebView2::Utilities::Utility::GetBrowserDirectory(webView2Version, webView2Channel, webViewFolder);
+	profile.browserDirectory  = WebView2::Utilities::Utility::GetBrowserDirectory(webView2Version, webView2Channel, webViewFolder);
 	profile.userDataDirectory = WebView2::Utilities::Utility::GetUserDataDirectory(webView2Channel);
-	profile.channel = webView2Channel.empty() ? L"stable release" : webView2Channel;	
-	profile.version = webView2Version;
-	profile.isTest = isTest;
-	profile.port = webViewport;
+	profile.channel  = webView2Channel.empty() ? L"stable release" : webView2Channel;	
+	profile.version  = webView2Version;
+	profile.isTest   = isTest;
+	profile.port     = webViewport;
+
+	// Resolve initial URL for WinInet pre-selection:
+	// 1. --url command-line argument
+	// 2. WEBVIEW2_INITIAL_URL environment variable
+	// 3. empty (WinInet pre-selection will be skipped at startup)
+	if (parser.HasOption(L"url"))
+	{
+		profile.initialUrl = parser.GetValueOr(L"url", L"");
+		LOG_TRACE(std::string("WinInet pre-selection URL from --url: ") + WideToNarrow(profile.initialUrl));
+	}
+	else
+	{
+		wchar_t envBuf[2048]{};
+		if (GetEnvironmentVariableW(L"WEBVIEW2_INITIAL_URL", envBuf, static_cast<DWORD>(std::size(envBuf))) > 0)
+		{
+			profile.initialUrl = envBuf;
+			LOG_TRACE(std::string("WinInet pre-selection URL from WEBVIEW2_INITIAL_URL: ") + WideToNarrow(profile.initialUrl));
+		}
+	}
+
 	return (hr);
 }
