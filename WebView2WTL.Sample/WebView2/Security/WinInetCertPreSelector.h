@@ -413,6 +413,13 @@ namespace webview::net
 			{
 				std::lock_guard lock(m_mutex);
 				m_certInfo = std::move(info);
+				LOG_TRACE(std::string("WinInet cert selected: host=") + WideToNarrow(m_certInfo->host) +
+					" port=" + std::to_string(m_certInfo->port) +
+					" subject=" + WideToNarrow(m_certInfo->subject));
+			}
+			else
+			{
+				LOG_TRACE("WinInet: no certificate was selected or error occurred");
 			}
 
 			return body;
@@ -425,8 +432,19 @@ namespace webview::net
 			if (!m_enabled.load(std::memory_order_acquire))
 				return false;
 			std::lock_guard lock(m_mutex);
-			if (!m_certInfo.has_value()) return false;
-			return m_certInfo->host == host && m_certInfo->port == port;
+			if (!m_certInfo.has_value()) 
+			{
+				LOG_TRACE(std::string("HasMatchFor: no cert info stored (host=") + WideToNarrow(host) + 
+					" port=" + std::to_string(port) + ")");
+				return false;
+			}
+			bool match = m_certInfo->host == host && m_certInfo->port == port;
+			LOG_TRACE(std::string("HasMatchFor: host=") + WideToNarrow(host) + 
+				" port=" + std::to_string(port) + 
+				" stored_host=" + WideToNarrow(m_certInfo->host) + 
+				" stored_port=" + std::to_string(m_certInfo->port) + 
+				" match=" + (match ? "true" : "false"));
+			return match;
 		}
 
 		// -------------------------------------------------------------------

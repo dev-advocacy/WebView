@@ -467,10 +467,13 @@ namespace WebView2::Utilities
 									preSel.HasMatchFor(host.get(),
 													  static_cast<INTERNET_PORT>(port)))
 								{
-									// Chercher dans la collection WebView2 le certificat
+									// Search in WebView2 collection for cert
 									// whose subject matches the stored WinInet certificate
 									const std::wstring wantedSubject = preSel.GetSubject();
 									wil::com_ptr<ICoreWebView2ClientCertificate> matchedCert;
+
+									LOG_TRACE(std::string("ClientCertRequested: looking for subject=") + 
+										WideToNarrow(wantedSubject) + " in " + std::to_string(certificateCollectionCount) + " certs");
 
 									for (UINT i = 0; i < certificateCollectionCount; ++i)
 									{
@@ -478,11 +481,15 @@ namespace WebView2::Utilities
 										if (FAILED(certificateCollection->GetValueAtIndex(i, &candidate)))
 											continue;
 										wil::unique_cotaskmem_string subj;
-										if (SUCCEEDED(candidate->get_Subject(&subj)) &&
-											wantedSubject == subj.get())
+										if (SUCCEEDED(candidate->get_Subject(&subj)))
 										{
-											matchedCert = candidate;
-											break;
+											LOG_TRACE(std::string("  cert[") + std::to_string(i) + "] subject=" + WideToNarrow(subj.get()));
+											if (wantedSubject == subj.get())
+											{
+												LOG_TRACE(std::string("  --> MATCH FOUND at index ") + std::to_string(i));
+												matchedCert = candidate;
+												break;
+											}
 										}
 									}
 
@@ -495,8 +502,10 @@ namespace WebView2::Utilities
 										args->put_Handled(TRUE);
 										return S_OK;
 									}
-									// Cert WinInet introuvable dans la collection WebView2 —
-									// on tombe en fallback (custom dialog ou natif)
+									else
+									{
+										LOG_TRACE(std::string("WinInet cert not found in WebView2 collection for subject=") + WideToNarrow(wantedSubject));
+									}
 								}
 
 								// --- Priority 2: custom certificate dialog ---
