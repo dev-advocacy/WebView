@@ -21,8 +21,26 @@ public:
             {
                 std::wstring option = arg.substr(arg.starts_with(L"--") ? 2 : 1);
                 size_t pos = option.find(L'=');
-                m_values[pos != std::wstring::npos ? option.substr(0, pos) : option] = 
-                    pos != std::wstring::npos ? option.substr(pos + 1) : L"";
+
+                if (pos != std::wstring::npos)
+                {
+                    // Syntax: --option=value
+                    m_values[option.substr(0, pos)] = option.substr(pos + 1);
+                }
+                else
+                {
+                    // Syntax: --option value (next argument is the value)
+                    if (i + 1 < argc && !std::wstring(argv[i + 1]).starts_with(L"-"))
+                    {
+                        // Next argument doesn't start with -, treat it as the value
+                        m_values[option] = argv[++i];
+                    }
+                    else
+                    {
+                        // No value following, store empty string
+                        m_values[option] = L"";
+                    }
+                }
             }
         }
         return true;
