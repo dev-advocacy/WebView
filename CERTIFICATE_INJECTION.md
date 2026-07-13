@@ -6,6 +6,8 @@ This document explains the complete process of pre-selecting a client certificat
 
 The implementation now includes **intelligent certificate filtering** that mimics WinInet's behavior by filtering certificates based on Enhanced Key Usage (EKU) for Client Authentication, ensuring only appropriate certificates are presented to the user.
 
+The code has been **refactored into separate, well-documented modules** with XML documentation comments for better maintainability.
+
 ## Architecture Diagram
 
 ```mermaid
@@ -19,13 +21,34 @@ graph TB
     F -->|"No match"| H["📋 Fallback to dialog"]
 ```
 
+## Modular Architecture
+
+The certificate injection system is organized into well-documented, cohesive modules:
+
+### Security Module (`Security/`)
+
+| File | Purpose | Documentation |
+|------|---------|---------------|
+| `WinInetHelpers.h` | RAII wrappers and shared types | ✅ XML comments |
+| `ClientCertificateSelector.h/.cpp` | Certificate filtering and EKU validation | ✅ XML comments |
+| `HttpsDownloader.h/.cpp` | WinInet HTTPS client with cert selection | ✅ XML comments |
+| `WinInetCertPreSelector.h/.cpp` | Thread-safe singleton for cert storage | ✅ XML comments |
+
+### Integration Points
+
+| File | Purpose |
+|------|---------|
+| `MainFrm.cpp` | Triggers pre-selection before WebView2 creation |
+| `WebViewEvents.h` | ClientCertificateRequested event handler |
+| `Utility.h/.cpp` | PEM normalization for reliable matching |
+
 ## Phase 1: WinInet Pre-Selection (BEFORE WebView2)
 
 - User launches: `.\WebView2.exe --url https://server.com`
 - MainFrm::OnCreate() calls `WinInetCertPreSelector::Instance().Run(url)`
-- WinInet sends HTTPS request to server
+- `HttpsDownloader` sends HTTPS request to server
 - Server asks for client certificate
-- **Smart filtering applied**: Only certificates with Client Authentication EKU are shown
+- **Smart filtering applied**: `ClientCertificateSelector` filters by Client Authentication EKU
 - Windows dialog appears with filtered certificates
 - Selected cert info is stored in singleton:
   - `host`: "server.com"
@@ -36,7 +59,14 @@ graph TB
 
 ### Key Method: Run()
 
+Located in `WinInetCertPreSelector.cpp`:
+
 ```cpp
+/// <summary>
+/// Executes an HTTPS request to the specified URL, triggering client certificate selection.
+/// The selected certificate is stored internally by endpoint (host:port).
+/// This should be called BEFORE creating the WebView2 control.
+/// </summary>
 std::string Run(const std::wstring& url, const std::wstring& certSubjectFilter = L"")
 {
     SelectedCertInfo info;
@@ -48,13 +78,13 @@ std::string Run(const std::wstring& url, const std::wstring& certSubjectFilter =
         std::lock_guard lock(m_mutex);
 
         // Store certificate for this host:port endpoint
-        const std::string key = MakeKey(info.host, info.port);
-        auto it = FindByKeyNoLock(key);
+        auto it = FindByEndpointNoLock(info.host, info.port);
         if (it != m_certInfos.end())
             *it = std::move(info);  // Update existing
         else
             m_certInfos.push_back(std::move(info));  // Add new
 
+        m_lastSelectedIndex = m_certInfos.size() - 1;
         LOG_TRACE("WinInet cert selected and stored");
     }
     return body;
@@ -81,7 +111,7 @@ m_webview2 = std::make_unique<WebView2::Core::CWebView2>(
 
 - Server responds: "Client certificate required"
 - WebView2 fires `ClientCertificateRequested` event
-- Event handler in WebViewEvents.h is triggered
+- Event handler in `WebViewEvents.h` is triggered
 
 ## Phase 4: Certificate Injection (THE CORE)
 
@@ -139,7 +169,7 @@ for (UINT i = 0; i < certificateCollectionCount; ++i)
     wil::unique_cotaskmem_string candidatePem;
     if (SUCCEEDED(candidate->ToPemEncoding(&candidatePem)))
     {
-        std::wstring candidatePemNormalized = NormalizePem(candidatePem.get());
+        std::wstring candidatePemNormalized = Utility::NormalizePem(candidatePem.get());
 
         // CRITICAL: Compare normalized PEM encodings (more reliable than subject)
         if (wantedPemNormalized == candidatePemNormalized)
@@ -179,7 +209,7 @@ else
 
 ## Smart Certificate Filtering
 
-The implementation now includes **intelligent certificate filtering** similar to WinInet's native behavior:
+The implementation now includes **intelligent certificate filtering** similar to WinInet's native behavior, implemented in `ClientCertificateSelector.cpp`:
 
 ### Features
 
@@ -189,9 +219,16 @@ The implementation now includes **intelligent certificate filtering** similar to
 
 ### Implementation
 
+Located in `ClientCertificateSelector.cpp`:
+
 ```cpp
+/// <summary>
 /// Check if certificate has Client Authentication EKU
-static bool HasClientAuthEKU(PCCERT_CONTEXT ctx)
+/// OID: 1.3.6.1.5.5.7.3.2 (szOID_PKIX_KP_CLIENT_AUTH)
+/// </summary>
+/// <param name="ctx">Certificate context to check</param>
+/// <returns>true if the certificate has Client Authentication EKU</returns>
+bool HasClientAuthEKU(PCCERT_CONTEXT ctx)
 {
     DWORD usageSize = 0;
     if (!CertGetEnhancedKeyUsage(ctx, 0, nullptr, &usageSize))
@@ -211,8 +248,14 @@ static bool HasClientAuthEKU(PCCERT_CONTEXT ctx)
     return false;
 }
 
-/// Select certificates with smart filtering
-static std::vector<UniqueCertContext> SelectClientAuthCertificates(
+/// <summary>
+/// Filters certificates from the current user's MY store to show only those
+/// suitable for client authentication and optionally matching a subject filter.
+/// </summary>
+/// <param name="request">Optional WinInet request handle for CA filtering</param>
+/// <param name="subjectFilter">Optional subject string to match</param>
+/// <returns>Vector of certificates matching all criteria</returns>
+std::vector<UniqueCertContext> SelectClientAuthCertificates(
     HINTERNET request = nullptr,
     const std::wstring& subjectFilter = L"")
 {
@@ -230,10 +273,15 @@ static std::vector<UniqueCertContext> SelectClientAuthCertificates(
         if (!HasClientAuthEKU(ctx))
             continue;
 
+        // Filter 3: Issued by acceptable CA (if server provides list)
+        if (request != nullptr && !IsIssuedByAcceptableCA(ctx, request))
+            continue;
+
         // Certificate passes all filters
-        result.push_back(DuplicateCert(ctx));
+        result.push_back(UniqueCertContext(CertDuplicateCertificateContext(ctx)));
     }
 
+    CertCloseStore(store, 0);
     return result;
 }
 ```
@@ -244,6 +292,7 @@ static std::vector<UniqueCertContext> SelectClientAuthCertificates(
 - **Security**: Only certificates suitable for client authentication are selectable
 - **Consistency**: Behavior matches WinInet's native certificate selection
 - **Fewer Errors**: Prevents selection of inappropriate certificates (signing-only, encryption-only, etc.)
+- **CA Filtering**: Optionally filters by server's acceptable CA list (future enhancement)
 
 ## Decision Flow
 
@@ -329,49 +378,133 @@ graph TD
 
 ## API Summary
 
-### put_SelectedCertificate()
+### Singleton Management
+
+#### `WinInetCertPreSelector::Instance()`
+- **Purpose**: Access the thread-safe singleton instance
+- **Returns**: Reference to the global `WinInetCertPreSelector`
+- **Thread-Safety**: Magic static initialization (C++11+)
+
+#### `SetEnabled(bool enabled)` / `IsEnabled()`
+- **Purpose**: Enable or disable the certificate pre-selection feature
+- **Thread-Safety**: Uses `std::atomic<bool>` for lock-free access
+- **Default**: Enabled
+
+### Certificate Selection & Storage
+
+#### `Run(url, certSubjectFilter)`
+- **Purpose**: Execute WinInet pre-selection before WebView2 creation
+- **Parameters**:
+  - `url`: Target HTTPS URL (e.g., `L"https://server.com"`)
+  - `certSubjectFilter`: Optional subject filter (empty = show dialog)
+- **Returns**: HTTP response body (may be ignored)
+- **Throws**: `WinInetException` or `std::runtime_error` on failure
+- **Side Effect**: Stores selected certificate by endpoint
+
+#### `HasMatchFor(host, port)`
+- **Purpose**: Check if a certificate was pre-selected for this endpoint
+- **Parameters**:
+  - `host`: Hostname string (e.g., `L"server.com"`)
+  - `port`: TCP port number (e.g., `443`)
+- **Returns**: `true` if matching certificate exists and feature is enabled
+- **Thread-Safety**: Read-only operation with mutex protection
+
+#### `GetPemEncodingFor(host, port)`
+- **Purpose**: Retrieve PEM encoding of stored certificate for endpoint
+- **Returns**: Base64-encoded DER certificate with headers
+- **Throws**: `std::runtime_error` if no certificate for endpoint
+- **Usage**: Used by WebView2 for certificate matching
+
+### Certificate Filtering (ClientCertificateSelector)
+
+#### `HasClientAuthEKU(ctx)`
+- **Purpose**: Check if certificate has Client Authentication EKU
+- **Parameter**: `PCCERT_CONTEXT ctx` - Certificate context to check
+- **Returns**: `true` if OID `1.3.6.1.5.5.7.3.2` is present
+- **Usage**: Called during certificate enumeration to filter eligible certificates
+
+#### `SelectClientAuthCertificates(request, filter)`
+- **Purpose**: Get filtered list of certificates suitable for client authentication
+- **Parameters**:
+  - `request`: Optional WinInet request handle (for CA filtering, future)
+  - `filter`: Optional subject string to match
+- **Returns**: `std::vector<UniqueCertContext>` of eligible certificates
+- **Filters Applied**:
+  1. Subject filter (if provided)
+  2. Client Authentication EKU required
+  3. Acceptable CA list (if request handle provided)
+
+#### `GetSubjectName(ctx)` / `GetIssuerName(ctx)`
+- **Purpose**: Extract formatted subject/issuer names from certificate
+- **Returns**: Wide string with formatted name (e.g., `L"CN=User Name"`)
+- **Fallback**: Returns hex-encoded subject if name extraction fails
+
+#### `GetPemEncoding(ctx)`
+- **Purpose**: Convert certificate context to PEM encoding
+- **Returns**: Wide string with Base64-encoded DER and headers
+- **Format**: 
+  ```
+  -----BEGIN CERTIFICATE-----
+  <Base64 data>
+  -----END CERTIFICATE-----
+  ```
+
+### WebView2 Integration
+
+#### `put_SelectedCertificate(certificate)`
 - **Purpose**: Tell WebView2 which certificate to use
 - **Input**: `ICoreWebView2ClientCertificate* certificate`
-- **Effect**: WebView2 will send this cert to server
+- **Effect**: WebView2 will send this certificate to the server
+- **Required**: Must call `put_Handled(TRUE)` to suppress native dialog
 
-### put_Handled()
-- **Purpose**: Mark event as handled by application
-- **Input**: `BOOL value` (TRUE to handle, FALSE to show native dialog)
-- **Effect**: Prevents native dialog if set to TRUE
+#### `put_Handled(value)`
+- **Purpose**: Mark ClientCertificateRequested event as handled
+- **Input**: `BOOL value` (`TRUE` to handle, `FALSE` for native dialog)
+- **Effect**: Prevents native certificate dialog when `TRUE`
 
-### HasMatchFor(host, port)
-- **Purpose**: Check if stored cert matches this server
-- **Returns**: true if same host:port, false otherwise
+### Utility Functions
 
-### GetPemEncodingFor(host, port)
-- **Purpose**: Get PEM encoding of stored certificate for endpoint
-- **Returns**: Base64-encoded DER certificate with headers
-
-### HasClientAuthEKU(ctx)
-- **Purpose**: Check if certificate has Client Authentication EKU
-- **Returns**: true if certificate is suitable for client authentication
-
-### SelectClientAuthCertificates(request, filter)
-- **Purpose**: Get filtered list of certificates suitable for client auth
-- **Parameters**: 
-  - `request`: WinInet request handle (for server CA list, future)
-  - `filter`: Optional subject filter
-- **Returns**: Vector of certificates with Client Auth EKU
-
-### Utility::NormalizePem(pem)
+#### `Utility::NormalizePem(pem)`
 - **Purpose**: Normalize PEM encoding for reliable certificate comparison
 - **Input**: PEM-encoded certificate string with headers and whitespace
 - **Returns**: Base64-only string (headers, newlines, and whitespace removed)
 - **Location**: `WebView2/Utilities/Utility.h` and `Utility.cpp`
-- **Usage**: Both WinInet pre-selection and WebView2 injection use this for certificate matching
+- **Usage**: Both WinInet pre-selection and WebView2 injection use this
+- **Example**:
+  ```cpp
+  // Input:  "-----BEGIN CERTIFICATE-----\nMIIC...\n-----END CERTIFICATE-----"
+  // Output: "MIIC..."
+  ```
 
 ## Key Files
 
-- `WinInetCertPreSelector.h`: Pre-selection singleton, WinInet logic, smart filtering
-- `WebViewEvents.h`: ClientCertificateRequested event handler with PEM-based injection
-- `Utility.h` / `Utility.cpp`: `NormalizePem()` utility function for certificate comparison
-- `MainFrm.cpp`: Calls Run() before WebView2 creation
-- `WebViewProfile.cpp`: Parses --url command-line argument
+### Security Module (`WebView2WTL.Sample/WebView2/Security/`)
+
+| File | Purpose | Lines | Status |
+|------|---------|-------|--------|
+| `WinInetHelpers.h` | RAII wrappers (`UniqueCertContext`, `UniqueInternetHandle`), `SelectedCertInfo` structure | ~80 | ✅ XML documented |
+| `ClientCertificateSelector.h` | Certificate filtering interface (EKU validation, subject/issuer extraction, PEM encoding) | ~60 | ✅ XML documented |
+| `ClientCertificateSelector.cpp` | Implementation of certificate store enumeration and filtering | ~200 | ✅ Well-commented |
+| `HttpsDownloader.h` | WinInet HTTPS client with certificate selection interface | ~120 | ✅ XML documented |
+| `HttpsDownloader.cpp` | WinInet request flow, retry logic, certificate attachment | ~250 | ✅ Well-commented |
+| `WinInetCertPreSelector.h` | Thread-safe singleton, endpoint-based certificate storage | ~130 | ✅ XML documented |
+| `WinInetCertPreSelector.cpp` | Singleton implementation, thread-safe accessors | ~150 | ✅ Well-commented |
+
+### Integration Points
+
+| File | Purpose | Key Functions |
+|------|---------|---------------|
+| `UI/MainFrm.cpp` | Triggers WinInet pre-selection before WebView2 creation | `OnCreate()` calls `WinInetCertPreSelector::Run()` |
+| `Utilities/WebViewEvents.h` | WebView2 ClientCertificateRequested event handler | `enable_client_certificate_request_event()` |
+| `Utilities/Utility.h/.cpp` | PEM normalization utility for certificate matching | `Utility::NormalizePem()` |
+
+### Documentation
+
+| File | Purpose |
+|------|---------|
+| `CERTIFICATE_INJECTION.md` | Complete architecture and flow documentation (this file) |
+| `SECURITY_AUDIT_REPORT.md` | Security audit results and verification |
+| `PRECOMPILED_HEADERS_OPTIMIZATION.md` | Header optimization documentation |
 
 ## Thread Safety
 
