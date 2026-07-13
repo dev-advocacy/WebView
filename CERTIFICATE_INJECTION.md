@@ -126,26 +126,8 @@ else
 const std::wstring wantedPem = preSel.GetPemEncodingFor(
     host.get(), static_cast<INTERNET_PORT>(port));
 
-// Normalize PEM (remove headers, whitespace, newlines)
-auto NormalizePem = [](const std::wstring& pem) -> std::wstring
-{
-    std::wstring normalized;
-    bool skipLine = false;
-    for (wchar_t c : pem)
-    {
-        if (c == L'-') { skipLine = true; continue; }
-        if (c == L'\n') { skipLine = false; continue; }
-        if (skipLine) continue;
-        if ((c >= L'A' && c <= L'Z') || (c >= L'a' && c <= L'z') || 
-            (c >= L'0' && c <= L'9') || c == L'+' || c == L'/' || c == L'=')
-        {
-            normalized += c;
-        }
-    }
-    return normalized;
-};
-
-const std::wstring wantedPemNormalized = NormalizePem(wantedPem);
+// Normalize PEM using Utility class (removes headers, whitespace, newlines)
+const std::wstring wantedPemNormalized = Utility::NormalizePem(wantedPem);
 
 wil::com_ptr<ICoreWebView2ClientCertificate> matchedCert;
 
@@ -376,10 +358,18 @@ graph TD
   - `filter`: Optional subject filter
 - **Returns**: Vector of certificates with Client Auth EKU
 
+### Utility::NormalizePem(pem)
+- **Purpose**: Normalize PEM encoding for reliable certificate comparison
+- **Input**: PEM-encoded certificate string with headers and whitespace
+- **Returns**: Base64-only string (headers, newlines, and whitespace removed)
+- **Location**: `WebView2/Utilities/Utility.h` and `Utility.cpp`
+- **Usage**: Both WinInet pre-selection and WebView2 injection use this for certificate matching
+
 ## Key Files
 
 - `WinInetCertPreSelector.h`: Pre-selection singleton, WinInet logic, smart filtering
 - `WebViewEvents.h`: ClientCertificateRequested event handler with PEM-based injection
+- `Utility.h` / `Utility.cpp`: `NormalizePem()` utility function for certificate comparison
 - `MainFrm.cpp`: Calls Run() before WebView2 creation
 - `WebViewProfile.cpp`: Parses --url command-line argument
 

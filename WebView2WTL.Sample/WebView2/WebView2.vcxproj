@@ -235,6 +235,9 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+            <ClCompile Include="Security\HttpsDownloader.cpp" />
+<ClCompile Include="Security\ClientCertificateSelector.cpp" />
+<ClCompile Include="Security\WinInetCertPreSelector.cpp" />
     <ClCompile Include="UI\AboutDlg.cpp" />
     <ClCompile Include="UI\DomainDlg.cpp" />
     <ClCompile Include="UI\DetectDlg.cpp" />
@@ -267,7 +270,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Logger\logger.h" />
-    <ClInclude Include="Security\WinInetCertPreSelector.h" />
+        <ClInclude Include="Security\ClientCertificateSelector.h" />
+    <ClInclude Include="Security\HttpsDownloader.h" />
+    <ClInclude Include="Security\WinInetHelpers.h" />
+<ClInclude Include="Security\WinInetCertPreSelector.h" />
     <ClInclude Include="UI\AboutDlg.h" />
     <ClInclude Include="Utilities\CommandLineParser.h" />
     <ClInclude Include="UI\DomainDlg.h" />

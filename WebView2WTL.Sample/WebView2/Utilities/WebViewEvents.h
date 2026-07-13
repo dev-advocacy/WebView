@@ -461,46 +461,8 @@ namespace WebView2::Utilities
 								host_name += L":";
 								host_name += std::to_wstring(port);
 
-								// Helper function to normalize PEM by keeping only base64 content
-								auto NormalizePem = [](const std::wstring& pem) -> std::wstring
-								{
-									std::wstring normalized;
-									normalized.reserve(pem.length());
-
-									bool skipLine = false;
-									for (wchar_t c : pem)
-									{
-										// Skip header/footer lines (BEGIN/END CERTIFICATE)
-										if (c == L'-')
-										{
-											skipLine = true;
-											continue;
-										}
-										if (c == L'\n')
-										{
-											skipLine = false;
-											continue;
-										}
-										if (skipLine)
-											continue;
-
-										// Keep only base64 characters (skip whitespace)
-										if ((c >= L'A' && c <= L'Z') || 
-											(c >= L'a' && c <= L'z') || 
-											(c >= L'0' && c <= L'9') || 
-											c == L'+' || c == L'/' || c == L'=')
-										{
-											normalized += c;
-										}
-									}
-									return normalized;
-								};
-
 								// --- Priority 1: WinInet pre-selected certificate injection ---
-								auto& preSel = webview::net::WinInetCertPreSelector::Instance();
-								auto val1 = preSel.IsEnabled();
-								auto val2 = preSel.HasMatchFor(host.get(), static_cast<INTERNET_PORT>(port));
-
+								auto& preSel = webview::net::WinInetCertPreSelector::Instance();								
 								if (preSel.IsEnabled() &&
 									preSel.HasMatchFor(host.get(),
 													  static_cast<INTERNET_PORT>(port)))
@@ -511,71 +473,39 @@ namespace WebView2::Utilities
 
 									if (wantedPem.empty())
 									{
-										LOG_TRACE("WinInet: PEM encoding is empty for this endpoint");
+										// Empty PEM, skip injection
 									}
 									else
 									{
 										wil::com_ptr<ICoreWebView2ClientCertificate> matchedCert;
 
 										// Normalize wanted PEM for comparison
-										const std::wstring wantedPemNormalized = NormalizePem(wantedPem);
-
-										LOG_TRACE(std::string("ClientCertRequested: comparing PEM cert in ") + 
-											std::to_string(certificateCollectionCount) + " certs");
-										LOG_TRACE(std::string("WantedPem length=") + std::to_string(wantedPem.length()) +
-											", normalized length=" + std::to_string(wantedPemNormalized.length()));
+										const std::wstring wantedPemNormalized = Utility::NormalizePem(wantedPem);
 
 										for (UINT i = 0; i < certificateCollectionCount; ++i)
 										{
 											wil::com_ptr<ICoreWebView2ClientCertificate> candidate;
 											if (FAILED(certificateCollection->GetValueAtIndex(i, &candidate)))
-											{
-												LOG_TRACE(std::string("  cert[") + std::to_string(i) + "] GetValueAtIndex FAILED");
 												continue;
-											}
-
-											// Get subject for logging
-											wil::unique_cotaskmem_string subj;
-											std::string subjStr = "?";
-											if (SUCCEEDED(candidate->get_Subject(&subj)))
-												subjStr = WideToNarrow(subj.get());
 
 											// Get the PEM encoding from the WebView2 certificate
 											wil::unique_cotaskmem_string candidatePem;
 											if (SUCCEEDED(candidate->ToPemEncoding(&candidatePem)))
 											{
 												std::wstring candidatePemStr(candidatePem.get());
-												std::wstring candidatePemNormalized = NormalizePem(candidatePemStr);
+													std::wstring candidatePemNormalized = Utility::NormalizePem(candidatePemStr);
 
-												LOG_TRACE(std::string("  cert[") + std::to_string(i) + 
-													"] subject=" + subjStr + 
-													", PEM length=" + std::to_string(candidatePemStr.length()) +
-													", normalized=" + std::to_string(candidatePemNormalized.length()));
-
-												// Compare the normalized PEM encodings
-												if (wantedPemNormalized == candidatePemNormalized)
-												{
-													LOG_TRACE(std::string("  --> PEM MATCH FOUND at index ") + std::to_string(i));
-													matchedCert = candidate;
-													break;
+													// Compare the normalized PEM encodings
+													if (wantedPemNormalized == candidatePemNormalized)
+													{
+														matchedCert = candidate;
+														break;
+													}
 												}
-												else
-												{
-													LOG_TRACE(std::string("  cert[") + std::to_string(i) + "] PEM does NOT match (normalized)");
-												}
-											}
-											else
-											{
-												LOG_TRACE(std::string("  cert[") + std::to_string(i) + 
-													"] subject=" + subjStr + ", ToPemEncoding FAILED");
-											}
 										}
 
 										if (matchedCert)
 										{
-											LOG_TRACE(std::string(__FUNCTION__)
-												+ " WinInet pre-selected cert injected for host: "
-												+ WideToNarrow(host.get()));
 											RETURN_IF_FAILED(args->put_SelectedCertificate(matchedCert.get()));
 											args->put_Handled(TRUE);
 											return S_OK;

@@ -31,6 +31,7 @@ namespace WebView2::Utilities
 		static std::wstring CookieToString(ICoreWebView2Cookie* cookie);
 		static std::error_code GetUniqueLogFileName(fs::path& pFileName);
 		static std::list<EdgeInfomation> EnumEdgeVersion();
+		static std::wstring NormalizePem(const std::wstring& pem);
 
 	private:
 		static std::wstring GetProgramFilesx86Directory();

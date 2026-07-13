@@ -458,4 +458,45 @@ namespace WebView2::Utilities
 
         return result + L"\"}";
     }
+
+    /// <summary>
+    /// Normalize PEM encoding by keeping only base64 content.
+    /// Removes BEGIN/END delimiters and whitespace for certificate comparison.
+    /// </summary>
+    /// <param name="pem">PEM-encoded certificate string</param>
+    /// <returns>Normalized base64-only string</returns>
+    std::wstring Utility::NormalizePem(const std::wstring& pem)
+    {
+        std::wstring normalized;
+        normalized.reserve(pem.length());
+
+        bool skipLine = false;
+        for (wchar_t c : pem)
+        {
+            // Skip header/footer lines (BEGIN/END CERTIFICATE)
+            if (c == L'-')
+            {
+                skipLine = true;
+                continue;
+            }
+            if (c == L'\n')
+            {
+                skipLine = false;
+                continue;
+            }
+            if (skipLine)
+                continue;
+
+            // Keep only base64 characters (skip whitespace)
+            if ((c >= L'A' && c <= L'Z') ||
+                (c >= L'a' && c <= L'z') ||
+                (c >= L'0' && c <= L'9') ||
+                c == L'+' || c == L'/' || c == L'=')
+            {
+                normalized += c;
+            }
+        }
+        return normalized;
+    }
+
 }
