@@ -90,8 +90,9 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 				preSel.Run(m_webviewprofile.initialUrl, L"");
 				LOG_TRACE(std::string("WinInet pre-selection: Run() completed, cert subject=") + WideToNarrow(preSel.GetSubject()));
 			}
-			catch (const std::exception&)
+			catch (const std::exception& ex)
 			{
+				LOG_TRACE(std::string("WinInet pre-selection exception: ") + ex.what());
 				// Non-fatal: server may not require a client certificate.
 			}
 		}

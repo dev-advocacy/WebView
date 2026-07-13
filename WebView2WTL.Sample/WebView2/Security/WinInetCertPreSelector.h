@@ -21,7 +21,9 @@
 #include <windows.h>
 #include <wininet.h>
 #include <wincrypt.h>
+#include <cryptuiapi.h>
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <mutex>
@@ -32,6 +34,7 @@
 
 #pragma comment(lib, "wininet.lib")
 #pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "cryptui.lib")
 
 namespace webview::net
 {
@@ -134,10 +137,34 @@ namespace webview::net
 			return UniqueCertContext(dup);
 		}
 
-		/// Extrait le subject (CN) du contexte de certificat.
+		/// Extracts a stable subject-like value from the certificate context.
+		/// Prefer UPN (often GUID-like in enterprise certs), then CN, then display name.
 		static std::wstring GetSubjectName(PCCERT_CONTEXT ctx)
 		{
-			DWORD len = CertGetNameStringW(ctx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, nullptr, 0);
+			// 1) UPN (Subject Alternative Name / user principal name)
+			DWORD len = CertGetNameStringW(ctx, CERT_NAME_UPN_TYPE, 0, nullptr, nullptr, 0);
+			if (len > 1)
+			{
+				std::wstring upn(len, L'\0');
+				CertGetNameStringW(ctx, CERT_NAME_UPN_TYPE, 0, nullptr, upn.data(), len);
+				if (!upn.empty() && upn.back() == L'\0') upn.pop_back();
+				return upn;
+			}
+
+			// 2) Common Name (CN)
+			len = CertGetNameStringW(ctx, CERT_NAME_ATTR_TYPE, 0,
+				reinterpret_cast<void*>(const_cast<char*>(szOID_COMMON_NAME)), nullptr, 0);
+			if (len > 1)
+			{
+				std::wstring cn(len, L'\0');
+				CertGetNameStringW(ctx, CERT_NAME_ATTR_TYPE, 0,
+					reinterpret_cast<void*>(const_cast<char*>(szOID_COMMON_NAME)), cn.data(), len);
+				if (!cn.empty() && cn.back() == L'\0') cn.pop_back();
+				return cn;
+			}
+
+			// 3) Fallback: display name
+			len = CertGetNameStringW(ctx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, nullptr, 0);
 			std::wstring name(len, L'\0');
 			CertGetNameStringW(ctx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, name.data(), len);
 			if (!name.empty() && name.back() == L'\0') name.pop_back();
@@ -164,6 +191,172 @@ namespace webview::net
 			CertGetCertificateContextProperty(ctx, CERT_FRIENDLY_NAME_PROP_ID, name.data(), &cb);
 			if (!name.empty() && name.back() == L'\0') name.pop_back();
 			return name;
+		}
+
+		/// Gets the PEM encoding of the certificate (Base64-encoded DER)
+		static std::wstring GetPemEncoding(PCCERT_CONTEXT ctx)
+		{
+			if (!ctx || !ctx->pbCertEncoded || ctx->cbCertEncoded == 0)
+				return {};
+
+			// Base64 encode the DER certificate
+			DWORD pemLen = 0;
+			if (!CryptBinaryToStringW(ctx->pbCertEncoded, ctx->cbCertEncoded,
+				CRYPT_STRING_BASE64HEADER, nullptr, &pemLen))
+				return {};
+
+			std::wstring pem(pemLen, L'\0');
+			if (!CryptBinaryToStringW(ctx->pbCertEncoded, ctx->cbCertEncoded,
+				CRYPT_STRING_BASE64HEADER, pem.data(), &pemLen))
+				return {};
+
+			// Remove trailing null if present
+			if (!pem.empty() && pem.back() == L'\0') pem.pop_back();
+			return pem;
+		}
+
+		/// Check if certificate has Client Authentication EKU (1.3.6.1.5.5.7.3.2)
+		static bool HasClientAuthEKU(PCCERT_CONTEXT ctx)
+		{
+			if (!ctx)
+				return false;
+
+			DWORD usageSize = 0;
+			if (!CertGetEnhancedKeyUsage(ctx, 0, nullptr, &usageSize))
+				return false;
+
+			std::vector<BYTE> usageBuffer(usageSize);
+			CERT_ENHKEY_USAGE* usage = reinterpret_cast<CERT_ENHKEY_USAGE*>(usageBuffer.data());
+
+			if (!CertGetEnhancedKeyUsage(ctx, 0, usage, &usageSize))
+				return false;
+
+			// Check for Client Authentication OID: 1.3.6.1.5.5.7.3.2
+			for (DWORD i = 0; i < usage->cUsageIdentifier; i++)
+			{
+				if (strcmp(usage->rgpszUsageIdentifier[i], szOID_PKIX_KP_CLIENT_AUTH) == 0)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// Get acceptable CA list from the TLS server via WinInet request handle
+		/// Note: This API is not reliably available across all WinInet versions
+		/// For now, we return empty list (= all CAs accepted)
+		static std::vector<std::vector<BYTE>> GetAcceptableCAsFromRequest(HINTERNET request)
+		{
+			std::vector<std::vector<BYTE>> result;
+
+			// TODO: Implement CA list retrieval when API is available
+			// For now, return empty (= accept all CAs, filter only by EKU)
+
+			LOG_TRACE("GetAcceptableCAsFromRequest: CA filtering not implemented, accepting all CAs");
+			return result;
+		}
+
+		/// Check if certificate is issued by one of the acceptable CAs
+		static bool IsIssuedByAcceptableCA(PCCERT_CONTEXT ctx,
+			const std::vector<std::vector<BYTE>>& acceptableCAs)
+		{
+			if (!ctx)
+				return false;
+
+			// If no CA list provided, all CAs are acceptable
+			if (acceptableCAs.empty())
+				return true;
+
+			CERT_NAME_BLOB issuerBlob = ctx->pCertInfo->Issuer;
+
+			for (const auto& caData : acceptableCAs)
+			{
+				CERT_NAME_BLOB caBlob;
+				caBlob.cbData = static_cast<DWORD>(caData.size());
+				caBlob.pbData = const_cast<BYTE*>(caData.data());
+
+				if (CertCompareCertificateName(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+					&issuerBlob, &caBlob))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// Select certificates with smart filtering (like WinInet).
+		/// Returns vector of certificates that match:
+		/// - Client Authentication EKU
+		/// - Issued by acceptable CA (if request provided)
+		/// - Subject filter (if provided)
+		static std::vector<UniqueCertContext> SelectClientAuthCertificates(
+			HINTERNET request = nullptr,
+			const std::wstring& subjectFilter = L"")
+		{
+			std::vector<UniqueCertContext> result;
+
+			// Get acceptable CA list from server (if request handle provided)
+			std::vector<std::vector<BYTE>> acceptableCAs;
+			if (request)
+			{
+				acceptableCAs = GetAcceptableCAsFromRequest(request);
+			}
+
+			HCERTSTORE store = CertOpenSystemStoreW(0, L"MY");
+			if (!store)
+			{
+				LOG_TRACE("SelectClientAuthCertificates: Failed to open MY store");
+				return result;
+			}
+
+			int totalCerts = 0;
+			int filteredCerts = 0;
+
+			PCCERT_CONTEXT ctx = nullptr;
+			while ((ctx = CertEnumCertificatesInStore(store, ctx)) != nullptr)
+			{
+				totalCerts++;
+
+				// Filter 1: Subject filter (if provided)
+				if (!subjectFilter.empty())
+				{
+					std::wstring subject = GetSubjectName(ctx);
+					if (subject.find(subjectFilter) == std::wstring::npos)
+					{
+						continue;
+					}
+				}
+
+				// Filter 2: Must have Client Authentication EKU
+				if (!HasClientAuthEKU(ctx))
+				{
+					continue;
+				}
+
+				// Filter 3: Must be issued by acceptable CA (if list provided)
+				if (!IsIssuedByAcceptableCA(ctx, acceptableCAs))
+				{
+					continue;
+				}
+
+				// Certificate passes all filters
+				PCCERT_CONTEXT dup = CertDuplicateCertificateContext(ctx);
+				if (dup)
+				{
+					result.emplace_back(UniqueCertContext(dup));
+					filteredCerts++;
+				}
+			}
+
+			CertCloseStore(store, 0);
+
+			LOG_TRACE(std::string("SelectClientAuthCertificates: ") + 
+				std::to_string(filteredCerts) + " certificates matched filters out of " + 
+				std::to_string(totalCerts) + " total");
+
+			return result;
 		}
 	};
 
@@ -255,7 +448,7 @@ namespace webview::net
 		}
 
 		/// Sends the request handling client certificate authentication.
-		/// Returns the certificate context used (may be nullptr when using the native dialog).
+		/// Returns the certificate context used.
 		static UniqueCertContext SendRequestWithCertAuth(
 			HINTERNET            request,
 			const std::wstring&  clientCertSubjectFilter,
@@ -268,9 +461,8 @@ namespace webview::net
 			{
 				if (HttpSendRequestW(request, nullptr, 0, nullptr, 0))
 				{
-					// Request succeeded — try to read the client cert that was used
 					if (!usedCert)
-						usedCert = QueryClientCertFromRequest(request);
+						usedCert = QueryClientCertFromRequest(request); // best effort fallback only
 					return usedCert;
 				}
 
@@ -280,35 +472,37 @@ namespace webview::net
 
 				if (clientCertSubjectFilter.empty())
 				{
-					LPVOID data = nullptr;
-					const DWORD dlgResult = InternetErrorDlg(
-						GetDesktopWindow(),
-						request,
-						ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED,
-						FLAGS_ERROR_UI_FLAGS_GENERATE_DATA | FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS,
-						&data);
-
-					if (dlgResult == ERROR_CANCELLED)
+					// Use smart filtering with request handle
+					usedCert = SelectClientCertificateWithDialog(host, port, request);
+					if (!usedCert)
 						throw std::runtime_error("Client certificate selection cancelled by user.");
-					if (dlgResult == ERROR_SUCCESS || dlgResult == ERROR_INTERNET_FORCE_RETRY)
-						continue;
-					throw WinInetException("InternetErrorDlg", dlgResult);
 				}
 				else
 				{
-					// Programmatic certificate selection
-					usedCert = ClientCertificateSelector::SelectFromCurrentUserMyStore(
-						clientCertSubjectFilter);
+					// Use smart filtering with subject filter
+					auto filteredCerts = ClientCertificateSelector::SelectClientAuthCertificates(
+						request, clientCertSubjectFilter);
 
-					if (!InternetSetOptionW(request,
-							INTERNET_OPTION_CLIENT_CERT_CONTEXT,
-							const_cast<CERT_CONTEXT*>(usedCert.get()),
-							sizeof(CERT_CONTEXT)))
+					if (filteredCerts.empty())
 					{
-						throw WinInetException(
-							"InternetSetOptionW(INTERNET_OPTION_CLIENT_CERT_CONTEXT)",
-							GetLastError());
+						throw std::runtime_error("No suitable client certificate found matching filter and server requirements.");
 					}
+
+					// Use the first matching certificate
+					usedCert = std::move(filteredCerts[0]);
+
+					LOG_TRACE(std::string("Auto-selected certificate with subject filter, ") + 
+						std::to_string(filteredCerts.size()) + " candidates matched");
+				}
+
+				if (!InternetSetOptionW(request,
+						INTERNET_OPTION_CLIENT_CERT_CONTEXT,
+						const_cast<CERT_CONTEXT*>(usedCert.get()),
+						sizeof(CERT_CONTEXT)))
+				{
+					throw WinInetException(
+						"InternetSetOptionW(INTERNET_OPTION_CLIENT_CERT_CONTEXT)",
+						GetLastError());
 				}
 			}
 
@@ -316,32 +510,104 @@ namespace webview::net
 				"Server requires client certificate and request retry failed.");
 		}
 
-		/// After a successful HttpSendRequestW, reads the client certificate
+		static UniqueCertContext SelectClientCertificateWithDialog(
+			const std::wstring& host, 
+			INTERNET_PORT port,
+			HINTERNET request = nullptr)
+		{
+			// Use smart filtering if request handle is provided
+			if (request)
+			{
+				auto filteredCerts = ClientCertificateSelector::SelectClientAuthCertificates(request);
+
+				if (filteredCerts.empty())
+				{
+					LOG_TRACE("SelectClientCertificateWithDialog: No certificates match server requirements");
+					return UniqueCertContext();
+				}
+
+				// Create a memory store with only filtered certificates
+				HCERTSTORE memStore = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+					CERT_STORE_CREATE_NEW_FLAG, nullptr);
+				if (!memStore)
+					throw WinInetException("CertOpenStore(MEMORY)", GetLastError());
+
+				for (auto& certUnique : filteredCerts)
+				{
+					CertAddCertificateContextToStore(memStore, certUnique.get(),
+						CERT_STORE_ADD_USE_EXISTING, nullptr);
+				}
+
+				const std::wstring title = L"Select client certificate for " + host + L":" + std::to_wstring(port);
+				PCCERT_CONTEXT selected = CryptUIDlgSelectCertificateFromStore(
+					memStore,
+					GetDesktopWindow(),
+					title.c_str(),
+					L"Choose a client certificate (filtered by server requirements)",
+					0,
+					0,
+					nullptr);
+
+				CertCloseStore(memStore, 0);
+
+				LOG_TRACE(std::string("SelectClientCertificateWithDialog: User ") + 
+					(selected ? "selected" : "cancelled") + " certificate from filtered list");
+
+				return UniqueCertContext(selected);
+			}
+			else
+			{
+				// Fallback: show all certificates from MY store (no filtering)
+				HCERTSTORE store = CertOpenSystemStoreW(0, L"MY");
+				if (!store)
+					throw WinInetException("CertOpenSystemStoreW", GetLastError());
+
+				const std::wstring title = L"Select client certificate for " + host + L":" + std::to_wstring(port);
+				PCCERT_CONTEXT selected = CryptUIDlgSelectCertificateFromStore(
+					store,
+					GetDesktopWindow(),
+					title.c_str(),
+					L"Choose a client certificate",
+					0,
+					0,
+					nullptr);
+
+				CertCloseStore(store, 0);
+				return UniqueCertContext(selected);
+			}
+		}
+
+		/// After a successful HttpSendRequestW, best-effort reads the client certificate
 		/// that WinInet used for the session (set by InternetErrorDlg or app).
-		/// Returns nullptr if no cert was used.
+		/// Returns nullptr if no cert was retrievable.
 		static UniqueCertContext QueryClientCertFromRequest(HINTERNET request)
 		{
-			INTERNET_CERTIFICATE_INFO certInfo{};
-			DWORD size = sizeof(certInfo);
-			if (!InternetQueryOptionW(request,
-					INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
-					&certInfo, &size))
-				return {};
-
-			// Open MY store and find the cert matching the server cert subject
-			// (the client cert is the one set on the handle, not the server cert)
-			// WinInet does not expose the selected client cert directly.
-			// Instead, query INTERNET_OPTION_CLIENT_CERT_CONTEXT if supported.
-			PCCERT_CONTEXT ctx = nullptr;
+			// IMPORTANT:
+			// - INTERNET_OPTION_CLIENT_CERT_CONTEXT is primarily documented for InternetSetOption.
+			// - On some WinInet/request combinations, InternetQueryOption may fail with
+			//   ERROR_INVALID_PARAMETER.
+			// - We treat this as non-fatal and log it for diagnostics.
+			CERT_CONTEXT ctx{};
 			DWORD ctxSize = sizeof(ctx);
 			if (InternetQueryOptionW(request,
 					INTERNET_OPTION_CLIENT_CERT_CONTEXT,
-					&ctx, &ctxSize) && ctx)
+					&ctx,
+					&ctxSize))
 			{
-				PCCERT_CONTEXT dup = CertDuplicateCertificateContext(ctx);
-				CertFreeCertificateContext(ctx);
-				return UniqueCertContext(dup);
+				PCCERT_CONTEXT dup = CertDuplicateCertificateContext(&ctx);
+				if (dup)
+				{
+					LOG_TRACE("QueryClientCertFromRequest: client cert context retrieved successfully");
+					return UniqueCertContext(dup);
+				}
+				LOG_TRACE("QueryClientCertFromRequest: CertDuplicateCertificateContext failed");
+				return {};
 			}
+
+			const DWORD err = GetLastError();
+			LOG_TRACE(std::string("QueryClientCertFromRequest: InternetQueryOptionW(INTERNET_OPTION_CLIENT_CERT_CONTEXT) failed, err=")
+				+ std::to_string(err)
+				+ (err == ERROR_INVALID_PARAMETER ? " (ERROR_INVALID_PARAMETER: option not queryable for this handle/context)" : ""));
 			return {};
 		}
 
@@ -374,7 +640,8 @@ namespace webview::net
 
 	// -----------------------------------------------------------------------
 	// Lazy singleton C++20 (magic static thread-safe)
-	// Stores the certificate selected during the pre-WebView WinInet request.
+	// Stores certificates selected during pre-WebView WinInet requests.
+	// One certificate can be retained per host:port endpoint.
 	// -----------------------------------------------------------------------
 	class WinInetCertPreSelector final
 	{
@@ -412,10 +679,24 @@ namespace webview::net
 			if (info.certContext)
 			{
 				std::lock_guard lock(m_mutex);
-				m_certInfo = std::move(info);
-				LOG_TRACE(std::string("WinInet cert selected: host=") + WideToNarrow(m_certInfo->host) +
-					" port=" + std::to_string(m_certInfo->port) +
-					" subject=" + WideToNarrow(m_certInfo->subject));
+
+				auto it = FindByEndpointNoLock(info.host, info.port);
+				if (it != m_certInfos.end())
+				{
+					*it = std::move(info);
+					m_lastSelectedIndex = static_cast<size_t>(std::distance(m_certInfos.begin(), it));
+				}
+				else
+				{
+					m_certInfos.emplace_back(std::move(info));
+					m_lastSelectedIndex = m_certInfos.size() - 1;
+				}
+
+				const auto& stored = m_certInfos[*m_lastSelectedIndex];
+				LOG_TRACE(std::string("WinInet cert selected: host=") + WideToNarrow(stored.host) +
+					" port=" + std::to_string(stored.port) +
+					" subject=" + WideToNarrow(stored.subject) +
+					" stored_count=" + std::to_string(m_certInfos.size()));
 			}
 			else
 			{
@@ -424,6 +705,7 @@ namespace webview::net
 
 			return body;
 		}
+
 		// -------------------------------------------------------------------
 		// Returns true if a pre-selected certificate matches the given host:port
 		// -------------------------------------------------------------------
@@ -431,73 +713,144 @@ namespace webview::net
 		{
 			if (!m_enabled.load(std::memory_order_acquire))
 				return false;
+
 			std::lock_guard lock(m_mutex);
-			if (!m_certInfo.has_value()) 
-			{
-				LOG_TRACE(std::string("HasMatchFor: no cert info stored (host=") + WideToNarrow(host) + 
-					" port=" + std::to_string(port) + ")");
-				return false;
-			}
-			bool match = m_certInfo->host == host && m_certInfo->port == port;
-			LOG_TRACE(std::string("HasMatchFor: host=") + WideToNarrow(host) + 
-				" port=" + std::to_string(port) + 
-				" stored_host=" + WideToNarrow(m_certInfo->host) + 
-				" stored_port=" + std::to_string(m_certInfo->port) + 
-				" match=" + (match ? "true" : "false"));
+			const auto it = FindByEndpointNoLock(host, port);
+			const bool match = (it != m_certInfos.end());
+
+			LOG_TRACE(std::string("HasMatchFor: host=") + WideToNarrow(host) +
+				" port=" + std::to_string(port) +
+				" match=" + (match ? "true" : "false") +
+				" stored_count=" + std::to_string(m_certInfos.size()));
 			return match;
 		}
 
 		// -------------------------------------------------------------------
-		// Thread-safe access to certificate information.
-		// Returns nullptr if no certificate is available.
+		// Thread-safe access for endpoint-specific certificate metadata.
+		// -------------------------------------------------------------------
+		[[nodiscard]] std::wstring GetSubjectFor(const std::wstring& host, INTERNET_PORT port) const
+		{
+			std::lock_guard lock(m_mutex);
+			const auto it = FindByEndpointNoLock(host, port);
+			return (it != m_certInfos.end()) ? it->subject : L"";
+		}
+
+		[[nodiscard]] std::wstring GetIssuerFor(const std::wstring& host, INTERNET_PORT port) const
+		{
+			std::lock_guard lock(m_mutex);
+			const auto it = FindByEndpointNoLock(host, port);
+			return (it != m_certInfos.end()) ? it->issuer : L"";
+		}
+
+		[[nodiscard]] const CERT_CONTEXT* GetCertContextFor(const std::wstring& host, INTERNET_PORT port) const noexcept
+		{
+			std::lock_guard lock(m_mutex);
+			const auto it = FindByEndpointNoLock(host, port);
+			return (it != m_certInfos.end()) ? it->certContext.get() : nullptr;
+		}
+
+		[[nodiscard]] std::wstring GetPemEncodingFor(const std::wstring& host, INTERNET_PORT port) const
+		{
+			std::lock_guard lock(m_mutex);
+			const auto it = FindByEndpointNoLock(host, port);
+			if (it == m_certInfos.end() || !it->certContext)
+				return {};
+			return ClientCertificateSelector::GetPemEncoding(it->certContext.get());
+		}
+
+		// -------------------------------------------------------------------
+		// Backward-compatible accessors: return the last selected certificate.
 		// -------------------------------------------------------------------
 		[[nodiscard]] const CERT_CONTEXT* GetCertContext() const noexcept
 		{
 			std::lock_guard lock(m_mutex);
-			if (!m_certInfo.has_value()) return nullptr;
-			return m_certInfo->certContext.get();
+			const SelectedCertInfo* info = GetLastSelectedNoLock();
+			return info ? info->certContext.get() : nullptr;
 		}
 
 		[[nodiscard]] std::wstring GetSubject() const
 		{
 			std::lock_guard lock(m_mutex);
-			return m_certInfo.has_value() ? m_certInfo->subject : L"";
+			const SelectedCertInfo* info = GetLastSelectedNoLock();
+			return info ? info->subject : L"";
 		}
 
 		[[nodiscard]] std::wstring GetIssuer() const
 		{
 			std::lock_guard lock(m_mutex);
-			return m_certInfo.has_value() ? m_certInfo->issuer : L"";
+			const SelectedCertInfo* info = GetLastSelectedNoLock();
+			return info ? info->issuer : L"";
 		}
 
 		[[nodiscard]] std::wstring GetHost() const
 		{
 			std::lock_guard lock(m_mutex);
-			return m_certInfo.has_value() ? m_certInfo->host : L"";
+			const SelectedCertInfo* info = GetLastSelectedNoLock();
+			return info ? info->host : L"";
 		}
 
 		[[nodiscard]] INTERNET_PORT GetPort() const noexcept
 		{
 			std::lock_guard lock(m_mutex);
-			return m_certInfo.has_value() ? m_certInfo->port : 0;
+			const SelectedCertInfo* info = GetLastSelectedNoLock();
+			return info ? info->port : 0;
+		}
+
+		[[nodiscard]] size_t Count() const noexcept
+		{
+			std::lock_guard lock(m_mutex);
+			return m_certInfos.size();
 		}
 
 		// -------------------------------------------------------------------
-		// Clear the stored certificate
+		// Clear all stored certificates
 		// -------------------------------------------------------------------
 		void Clear() noexcept
 		{
 			std::lock_guard lock(m_mutex);
-			m_certInfo.reset();
+			m_certInfos.clear();
+			m_lastSelectedIndex.reset();
 		}
 
 	private:
+		using CertStore = std::vector<SelectedCertInfo>;
+		using CertStoreIterator = CertStore::iterator;
+		using CertStoreConstIterator = CertStore::const_iterator;
+
 		WinInetCertPreSelector()  = default;
 		~WinInetCertPreSelector() = default;
 
-		mutable std::mutex              m_mutex;
-		std::optional<SelectedCertInfo> m_certInfo;
-		std::atomic<bool>               m_enabled{ true };
+		[[nodiscard]] CertStoreIterator FindByEndpointNoLock(const std::wstring& host, INTERNET_PORT port)
+		{
+			return std::find_if(m_certInfos.begin(), m_certInfos.end(),
+				[&host, port](const SelectedCertInfo& item)
+				{
+					return item.port == port && item.host == host;
+				});
+		}
+
+		[[nodiscard]] CertStoreConstIterator FindByEndpointNoLock(const std::wstring& host, INTERNET_PORT port) const
+		{
+			return std::find_if(m_certInfos.begin(), m_certInfos.end(),
+				[&host, port](const SelectedCertInfo& item)
+				{
+					return item.port == port && item.host == host;
+				});
+		}
+
+		[[nodiscard]] const SelectedCertInfo* GetLastSelectedNoLock() const noexcept
+		{
+			if (!m_lastSelectedIndex.has_value())
+				return nullptr;
+			if (*m_lastSelectedIndex >= m_certInfos.size())
+				return nullptr;
+			return &m_certInfos[*m_lastSelectedIndex];
+		}
+
+		mutable std::mutex         m_mutex;
+		CertStore                  m_certInfos;
+		std::optional<size_t>      m_lastSelectedIndex;
+		std::atomic<bool>          m_enabled{ true };
 	};
 
 } // namespace webview::net
