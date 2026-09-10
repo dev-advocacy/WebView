@@ -15,28 +15,46 @@ The solution relies on the following dependencies:
 
 ### Prerequisites
 
-1. **Visual Studio 2022**: Ensure you have Visual Studio 2022 installed on your machine. You can download it from the [Visual Studio website](https://visualstudio.microsoft.com/).
+1. **Visual Studio 2026** (with the **v145** platform toolset): The `WebView2` project targets the **v145** toolset, which ships with Visual Studio 2026. The `WebView2Logger` project targets the **v143** toolset (Visual Studio 2022). Make sure both toolsets and the **Desktop development with C++** workload (MSVC + Windows 10/11 SDK) are installed. You can download Visual Studio from the [Visual Studio website](https://visualstudio.microsoft.com/).
+2. **Git submodules**: This repository uses git submodules (a stripped `cpprestsdk` fork under `third_party/cpprestsdk`, which itself pulls `websocketpp`). They **must** be initialized, otherwise headers such as `cpprest/json.h` will not be found (compiler error `C1083`).
+3. **Internet access**: Required on the first build so vcpkg can download/build the manifest dependencies (`webview2`, `wtl`, `wil`, `opentelemetry-cpp`).
 
 ## How to Build the Solution Using vcpkg
 
 ### Steps to Build
 
-1. **Install vcpkg**: If you haven't already installed vcpkg, follow these steps:
-    using command line, clone the vcpkg repository:
-    git clone https://github.com/microsoft/vcpkg.git
-    cd vcpkg 
- - Bootstrap vcpkg:
-  ./bootstrap-vcpkg.bat
+1. **Clone the repository with its submodules**:
 
-2. **Open the Solution**: Open the solution file (`WebView2.sln`) in Visual Studio 2022.
+   ```
+   git clone --recursive https://github.com/dev-advocacy/WebView.git
+   ```
 
-3. **Build the Solution**: Build the solution by selecting __Build > Build Solution__ from the menu or by pressing `Ctrl+Shift+B`.
+   If you already cloned without `--recursive`, initialize the submodules afterwards:
 
-4. **Run the Application**: After successfully building the solution, run the application by selecting __Debug > Start Debugging__ from the menu or by pressing `F5`.
+   ```
+   git submodule update --init --recursive
+   ```
+
+2. **Install vcpkg** (optional): Visual Studio 2026 ships with a bundled, integrated vcpkg, so this step is usually not required. If you want a standalone vcpkg:
+
+   ```
+   git clone https://github.com/microsoft/vcpkg.git
+   cd vcpkg
+   ./bootstrap-vcpkg.bat
+   ```
+
+   The dependency versions are pinned via the `builtin-baseline` in `WebView2WTL.Sample/WebView2/vcpkg.json`, so the restore is deterministic.
+
+3. **Open the Solution**: Open the solution file (`WebView2WTL.Sample/WebViewSolution.sln`) in **Visual Studio 2026**. Launch Visual Studio normally (from the Start menu), **not** from a Developer Command Prompt targeting x86, to avoid a stale build environment that can break vcpkg's compiler detection.
+
+4. **Build the Solution**: Build the solution by selecting __Build > Build Solution__ from the menu or by pressing `Ctrl+Shift+B`. vcpkg restores the manifest dependencies automatically on the first build.
+
+5. **Run the Application**: After successfully building the solution, run the application by selecting __Debug > Start Debugging__ from the menu or by pressing `F5`.
 
 ### Additional Notes
 
 - Ensure that the WebView2 runtime is installed on your machine. You can download it from the [Microsoft Edge WebView2 website](https://developer.microsoft.com/en-us/microsoft-edge/webview2/).
+- If you get `error C1083: Cannot open include file: 'cpprest/json.h'`, the git submodules are not initialized. Run `git submodule update --init --recursive` and rebuild.
 - If you encounter any issues during the build process, check the output window in Visual Studio for error messages and ensure that all dependencies are correctly installed and configured.
 
 ## Features
