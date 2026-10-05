@@ -16,6 +16,9 @@
 #include "../Messaging/RegisterMessages.h"
 #include "../Utilities/Utility.h"
 
+#ifndef WEBVIEW2_USE_WINDOWED_CONTROLLER
+#define WEBVIEW2_USE_WINDOWED_CONTROLLER 0
+#endif
 
 namespace WebView2::Core
 {
@@ -608,13 +611,16 @@ namespace WebView2::Core
 			return TRUE;
 		}
 
-		HRESULT OnCreateCoreWebView2ControllerCompleted(HRESULT result, ICoreWebView2CompositionController* compositionController)
+		HRESULT OnCreateCoreWebView2ControllerCompleted(HRESULT result, ICoreWebView2Controller* controller,
+			wil::com_ptr<ICoreWebView2CompositionController> compositionController = nullptr)
 		{
 			LOG_TRACE(__FUNCTION__);
-			if (result != S_OK)
+			if (FAILED(result))
 				return result;
+			if (!controller)
+				return E_POINTER;
+			m_controller = controller;
 			m_compositionController = compositionController;
-			RETURN_IF_FAILED(m_compositionController->QueryInterface(IID_PPV_ARGS(&m_controller)));
 			RETURN_IF_FAILED(m_controller->get_CoreWebView2(&m_webView));
 
 
@@ -640,6 +646,34 @@ namespace WebView2::Core
 			(static_cast<T*>(this))->put_bounds(bounds);
 
 			return S_OK;
+		}
+
+		HRESULT CreateWebViewController()
+		{
+#pragma region controller_mode
+#if WEBVIEW2_USE_WINDOWED_CONTROLLER
+			return m_webViewEnvironment->CreateCoreWebView2Controller(m_hwnd,
+				Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
+					[this](HRESULT hr, ICoreWebView2Controller* controller) -> HRESULT
+					{
+						if (FAILED(hr)) return hr;
+						return OnCreateCoreWebView2ControllerCompleted(hr, controller);
+					}).Get());
+#else
+			auto environment3 = m_webViewEnvironment.try_query<ICoreWebView2Environment3>();
+			if (!environment3) return E_NOINTERFACE;
+			return environment3->CreateCoreWebView2CompositionController(m_hwnd,
+				Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>(
+					[this](HRESULT hr, ICoreWebView2CompositionController* compositionController) -> HRESULT
+					{
+						if (FAILED(hr)) return hr;
+						if (!compositionController) return E_POINTER;
+						wil::com_ptr<ICoreWebView2Controller> controller;
+						RETURN_IF_FAILED(compositionController->QueryInterface(IID_PPV_ARGS(&controller)));
+						return OnCreateCoreWebView2ControllerCompleted(hr, controller.get(), compositionController);
+					}).Get());
+#endif
+#pragma endregion controller_mode
 		}
 
 		/// <summary>
@@ -702,22 +736,9 @@ namespace WebView2::Core
 						{
 							HRESULT hr = S_OK;
 							m_webViewEnvironment = environment;
-							wil::com_ptr<ICoreWebView2Environment3> webViewEnvironment3 = m_webViewEnvironment.try_query<ICoreWebView2Environment3>();
-							if (webViewEnvironment3)
+							if (m_webViewEnvironment)
 							{
-								auto hr = webViewEnvironment3->CreateCoreWebView2CompositionController(m_hwnd,
-									Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>(
-										[this](HRESULT hr, ICoreWebView2CompositionController* compositionController) -> HRESULT
-										{
-											if (SUCCEEDED(hr)) {
-
-												hr = OnCreateCoreWebView2ControllerCompleted(hr, compositionController);
-											}
-											else
-												RETURN_IF_FAILED(hr);
-											return hr;
-										})
-									.Get());
+								hr = CreateWebViewController();
 								if (SUCCEEDED(hr))
 								{
 									SingleWebView2::get().set_webViewEnvironment(m_webViewEnvironment);
@@ -731,22 +752,9 @@ namespace WebView2::Core
 
 				HRESULT hr = S_OK;
 				m_webViewEnvironment = webViewEnvironment;
-				wil::com_ptr<ICoreWebView2Environment3> webViewEnvironment3 = m_webViewEnvironment.try_query<ICoreWebView2Environment3>();
-				if (webViewEnvironment3)
+				if (m_webViewEnvironment)
 				{
-					auto hr = webViewEnvironment3->CreateCoreWebView2CompositionController(m_hwnd,
-						Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>(
-							[this](HRESULT hr, ICoreWebView2CompositionController* compositionController) -> HRESULT
-							{
-								if (SUCCEEDED(hr)) {
-
-									hr = OnCreateCoreWebView2ControllerCompleted(hr, compositionController);
-								}
-								else
-									RETURN_IF_FAILED(hr);
-								return hr;
-							})
-						.Get());
+					hr = CreateWebViewController();
 				}
 				return hr;
 			}

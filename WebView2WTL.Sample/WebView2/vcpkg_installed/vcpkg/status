@@ -1,0 +1,152 @@
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 51685afaa8383492a91136dc3204fef7718d25e3b20c8af53ca372fb09a3f388
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: ac192c62af20d483ffd5b856cdc4249bd3e63edce4a9cc490c9703fc080e40f0
+Status: install ok installed
+
+Package: abseil
+Version: 20260107.1
+Port-Version: 3
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 5fb5cc971c034d0757a4a5bc49ed4a3c5f44251fc048da1614fd32828ac0409f
+Description: Abseil is an open-source collection of C++ library code designed to augment the C++ standard library. The Abseil library code is collected from Google's own C++ code base, has been extensively tested and used in production, and is the same code we depend on in our daily coding lives.
+    In some cases, Abseil provides pieces missing from the C++ standard; in others, Abseil provides alternatives to the standard for special needs we've found through usage in the Google code base. We denote those cases clearly within the library code we provide you.
+    Abseil is not meant to be a competitor to the standard library; we've just found that many of these utilities serve a purpose within our code base, and we now want to provide those resources to the C++ community as a whole.
+Status: install ok installed
+
+Package: utf8-range
+Version: 6.33.4
+Depends: abseil, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 56540c4d5ee0f904de1c244cb9ec42776aaec85294454a99118ab0d15c320eb8
+Description: Fast UTF-8 validation with Range algorithm (NEON+SSE4+AVX2)
+Status: install ok installed
+
+Package: protobuf
+Version: 6.33.4
+Port-Version: 2
+Depends: abseil, utf8-range, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 23c5ca13d6c3c725ad4350067df625ea9bc9e8133c466a14073995844f45c39e
+Description: Google's language-neutral, platform-neutral, extensible mechanism for serializing structured data.
+Status: install ok installed
+
+Package: zlib
+Version: 1.3.2
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 846864a0eb239f6396d1ecb201781f15666acbd92d31c4f27f1c2bf3eaf13a9c
+Description: A compression library
+Status: install ok installed
+
+Package: curl
+Version: 8.21.0
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config, zlib
+Architecture: x64-windows
+Multi-Arch: same
+Abi: b5adbe533bc02da3b5de654757a86f074529be2e7e08513d63f6fbf1d540c624
+Description: A library for transferring data with URLs
+Default-Features: non-http, ssl
+Status: install ok installed
+
+Package: curl
+Feature: non-http
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enables protocols beyond HTTP/HTTPS/HTTP2/HTTP3
+Status: install ok installed
+
+Package: curl
+Feature: ssl
+Architecture: x64-windows
+Multi-Arch: same
+Description: Default SSL / TLS implementation.
+Status: install ok installed
+
+Package: curl
+Feature: sspi
+Architecture: x64-windows
+Multi-Arch: same
+Description: SSPI support
+Status: install ok installed
+
+Package: nlohmann-json
+Version: 3.12.0
+Port-Version: 2
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: a8d11cb25da57150724cc4e4530fc5325092d2c250e2e047cfd2bc557f4886ff
+Description: JSON for Modern C++
+Status: install ok installed
+
+Package: opentelemetry-cpp
+Version: 1.27.0
+Depends: abseil, nlohmann-json, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 631a92c74b99daa45bed30b129ee44e832babf490ac087cac1c2de0fc3639e3a
+Description: OpenTelemetry is a collection of tools, APIs, and SDKs.
+    You use it to instrument, generate, collect, and export telemetry data (metrics, logs, and traces) for analysis in order to understand your software's performance and behavior.
+Status: install ok installed
+
+Package: opentelemetry-cpp
+Feature: otlp-http
+Depends: curl, protobuf
+Architecture: x64-windows
+Multi-Arch: same
+Description: Whether to include the OpenTelemetry Protocol over HTTP in the SDK
+Status: install ok installed
+
+Package: wil
+Version: 1.0.260126.7
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 62dc6258038805d776757976b7598cfaa1398b16eaf3d022e994ff13b58c8b4d
+Description: The Windows Implementation Libraries (WIL) is a header-only C++ library created to make life easier for developers on Windows through readable type-safe C++ interfaces for common Windows coding patterns.
+Status: install ok installed
+
+Package: webview2
+Version: 1.0.3800.47
+Depends: wil
+Architecture: x64-windows
+Multi-Arch: same
+Abi: d0240afa6ff22a80474346b13a15ff9654bcf91830efc5369a9189784a1c45ea
+Description: The WebView2 control allows you to embed web technologies (HTML, CSS, and JavaScript) using Microsoft Edge
+Status: install ok installed
+
+Package: atl
+Version: 0
+Port-Version: 1
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 78a255568bde4bde9eb566c3616a6151796658f3c544b842474f67b055860ad7
+Description: A stub package that ensures Visual Studio has Active Template Library (ATL) installed.
+Status: install ok installed
+
+Package: wtl
+Version: 10.0.10320
+Port-Version: 5
+Depends: atl
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 8796f2c577b3fde9c43482feb5bad3afb4a9d4c675c4a99b9050201885adf30e
+Description: Windows Template Library (WTL) is a C++ library for developing Windows applications and UI components.
+Status: install ok installed
+

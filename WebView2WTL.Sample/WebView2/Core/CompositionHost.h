@@ -27,13 +27,26 @@ namespace WebView2::Core
 		// Message map and handlers
 		BEGIN_MSG_MAP(CCompositionHost)
 			MESSAGE_HANDLER(WM_SIZE, OnSize)
+			MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
 			MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, onMouseEvent)
 		END_MSG_MAP()
 
 #pragma region windows_event
+		LRESULT OnSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+		{
+			if (m_controller)
+				m_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+			return 0;
+		}
+
 		LRESULT onMouseEvent(UINT message, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 		{
 			T* pT = static_cast<T*>(this);
+			if (!m_compositionController)
+			{
+				bHandled = FALSE;
+				return 0L;
+			}
 
 			// Manually relay mouse messages to the WebView
 			if (m_dcompDevice)
@@ -56,6 +69,12 @@ namespace WebView2::Core
 				bool isMouseInWebView = PtInRect(&m_webViewBounds, point);
 				if (isMouseInWebView || message == WM_MOUSELEAVE || m_isCapturingMouse)
 				{
+					if (message == WM_LBUTTONDOWN && isMouseInWebView &&
+						::GetFocus() != pT->m_hWnd && !::IsChild(pT->m_hWnd, ::GetFocus()))
+					{
+						::SetFocus(pT->m_hWnd);
+					}
+
 					DWORD mouseData = 0;
 
 					switch (message)
@@ -164,15 +183,18 @@ namespace WebView2::Core
 		 * \param compositionController
 		 * \return S_OK or a failure
 		 */
-		HRESULT initialize(const HWND hwnd, wil::com_ptr<ICoreWebView2Controller> controller, wil::com_ptr<ICoreWebView2CompositionController> compositionController)
+		HRESULT initialize(const HWND hwnd, wil::com_ptr<ICoreWebView2Controller> controller, wil::com_ptr<ICoreWebView2CompositionController> compositionController = nullptr)
 		{
 			LOG_TRACE(__FUNCTION__);
-			if (controller && compositionController && IsWindow(hwnd))
+			if (controller && IsWindow(hwnd))
 			{
 				m_controller = controller;
 				m_compositionController = compositionController;
-				RETURN_IF_FAILED(initialize_composition(hwnd));
-				RETURN_IF_FAILED(InitializeCursorCapture(hwnd));
+				if (m_compositionController)
+				{
+					RETURN_IF_FAILED(initialize_composition(hwnd));
+					RETURN_IF_FAILED(InitializeCursorCapture(hwnd));
+				}
 			}
 			else
 			{
