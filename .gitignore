@@ -400,3 +400,5 @@ FodyWeavers.xsd
 *.sln.iml
 /webapptest/wwwroot/lib/bootstrap/dist
 /ConsoleWininetTestClientCert
+/docs/cef-osr-emoji-panel.md
+/docs/panneau-emoji-webview2-cef.md
