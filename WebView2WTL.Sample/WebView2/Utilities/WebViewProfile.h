@@ -6,6 +6,7 @@ typedef struct ProfileInformation
 	std::wstring  userDataDirectory;
 	std::wstring  channel;
 	std::wstring  version;
+	std::wstring  url;
 	std::wstring  port;
 	bool isTest;
 
@@ -16,4 +17,3 @@ class CWebViewProfile
 public:
 	static HRESULT Profile(ProfileInformation_t& profile);
 };
-

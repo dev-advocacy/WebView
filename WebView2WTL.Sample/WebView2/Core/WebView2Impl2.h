@@ -693,13 +693,20 @@ namespace WebView2::Core
 
 			// enable single sign on with Azure Entra ID
 			hr = options->put_AllowSingleSignOnUsingOSPrimaryAccount(TRUE);
+			RETURN_IF_FAILED(hr);
+
+			const std::wstring language = WebView2::Utilities::Utility::GetUserMUI();
+			if (!language.empty())
+			{
+				RETURN_IF_FAILED(options->put_Language(language.c_str()));
+			}
 
 
 			if (m_is_test == true)
 			{
 				m_port = m_port.empty() ? L"9222" : m_port;
 				LOG_DEBUG(std::string("Start the WebView2 process with the Chrome DevTools Protocol enabled which allows the automation by Playwright. Port=") + WideToNarrow(m_port));
-				argbrowser += L"--remote-debugging-port=" + m_port;
+				argbrowser += L" --remote-debugging-port=" + m_port;
 			}
 			if (log == true)
 			{

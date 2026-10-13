@@ -17,6 +17,8 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 	parser.AddOption("channel", "set WebView2 channel: beta, dev, canary, or fixed (empty for stable)");
 	parser.AddOption("test", "start the WebView2 in test mode");
 	parser.AddOption("port", "specify a communication port for the test");
+	parser.AddOption("url", "set the initial WebView2 URL");
+	parser.AddOption("remote-debugging-port", "enable remote debugging on the specified port");
 	parser.AddOption("root", "User-provided WebView2 root folder");
 
 	parser.Parse(argc, argv);
@@ -51,7 +53,19 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 	
 	bool isTest = false;
 	std::wstring webViewport = L"";
-	if (parser.HasOption(L"test"))
+	if (parser.HasOption(L"remote-debugging-port"))
+	{
+		webViewport = parser.GetValueOr(L"remote-debugging-port", L"");
+		if (webViewport.empty())
+		{
+			LOG_ERROR("Error: 'remote-debugging-port' requires a value.");
+			MessageBox(nullptr, L"Error: 'remote-debugging-port' requires a value.", L"Error", MB_ICONERROR);
+			return E_INVALIDARG;
+		}
+		isTest = true;
+		LOG_TRACE(std::string("remote debugging is on, port is=") + WideToNarrow(webViewport));
+	}
+	else if (parser.HasOption(L"test"))
 	{
 		if (parser.HasOption(L"port"))
 		{
@@ -65,6 +79,14 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 			MessageBox(nullptr, L"Error: 'port' option is required when 'test' is specified.", L"Error", MB_ICONERROR);
 			return E_INVALIDARG;
 		}
+	}
+
+	std::wstring webViewUrl = parser.GetValueOr(L"url", L"https://msdn.microsoft.com");
+	if (webViewUrl.empty())
+	{
+		LOG_ERROR("Error: 'url' requires a value.");
+		MessageBox(nullptr, L"Error: 'url' requires a value.", L"Error", MB_ICONERROR);
+		return E_INVALIDARG;
 	}
 
 	// Verify that the WebView2 runtime is installed.	
@@ -102,6 +124,7 @@ HRESULT CWebViewProfile::Profile(ProfileInformation_t& profile)
 	profile.userDataDirectory = WebView2::Utilities::Utility::GetUserDataDirectory(webView2Channel);
 	profile.channel = webView2Channel.empty() ? L"stable release" : webView2Channel;	
 	profile.version = webView2Version;
+	profile.url = webViewUrl;
 	profile.isTest = isTest;
 	profile.port = webViewport;
 	return (hr);
